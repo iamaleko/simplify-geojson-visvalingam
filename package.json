@@ -1,0 +1,31 @@
+{
+  "name": "simplify-geojson-visvalingam",
+  "version": "1.0.0",
+  "description": "GeoJSON simplification library using the Visvalingam algorithm for efficient point reduction and geometry preservation.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamaleko/simplify-geojson-visvalingam.git"
+  },
+  "keywords": [
+    "geojson",
+    "simplification",
+    "simplify",
+    "visvalingam",
+    "visvalingam-whyatt",
+    "geometry",
+    "gis",
+    "geospatial",
+    "geo",
+    "map"
+  ],
+  "author": "Alexander Kolobov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iamaleko/simplify-geojson-visvalingam/issues"
+  },
+  "homepage": "https://github.com/iamaleko/simplify-geojson-visvalingam#readme"
+}

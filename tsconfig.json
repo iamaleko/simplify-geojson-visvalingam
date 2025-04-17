@@ -1,0 +1,21 @@
+{
+  "include": ["./src/**/*", "./test/**/*"],
+  "compilerOptions": {
+    "paths": {
+      "@src/*": ["./src/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@test/*": ["./test/*"],
+    },
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "esModuleInterop": true
+  }
+}

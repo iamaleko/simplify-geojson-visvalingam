@@ -2,14 +2,8 @@
   "name": "simplify-geojson-visvalingam",
   "version": "1.0.0",
   "description": "GeoJSON simplification library using the Visvalingam algorithm for efficient point reduction and geometry preservation.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/iamaleko/simplify-geojson-visvalingam.git"
-  },
+  "author": "Alexander Kolobov",
+  "license": "MIT",
   "keywords": [
     "geojson",
     "simplification",
@@ -22,10 +16,39 @@
     "geo",
     "map"
   ],
-  "author": "Alexander Kolobov",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/iamaleko/simplify-geojson-visvalingam/issues"
   },
-  "homepage": "https://github.com/iamaleko/simplify-geojson-visvalingam#readme"
+  "homepage": "https://github.com/iamaleko/simplify-geojson-visvalingam#readme",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "watch": "tsup --watch",
+    "build": "npm run test && tsup",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iamaleko/simplify-geojson-visvalingam.git"
+  },
+  "devDependencies": {
+    "@types/assert": "^1.5.11",
+    "@types/geojson": "^7946.0.16",
+    "@types/mocha": "^10.0.10",
+    "mocha": "^11.1.0",
+    "tsup": "^8.4.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
 }

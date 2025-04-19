@@ -1,6 +1,5 @@
-import { GeoJsonObject } from 'geojson';
+import { GeoJsonObject } from 'geojson'
 import {
-  isObject,
   isFeature,
   isFeatureCollection,
   isPoint,
@@ -10,7 +9,7 @@ import {
   isPolygon,
   isMultiPolygon,
   isGeometryCollection,
-} from '@lib/typeGuards';
+} from '@lib/typeGuards'
 
 export default function simplify(geojson: GeoJsonObject): GeoJsonObject {
   if (
@@ -26,7 +25,9 @@ export default function simplify(geojson: GeoJsonObject): GeoJsonObject {
   } else if (isPoint(geojson) || isMultiPoint(geojson)) {
     // nothing to simplify
   } else {
-    throw new TypeError(`Expected a GeoJsonObject, but received ${typeof geojson}.`);
+    throw new TypeError(
+      `Expected a GeoJsonObject, but received ${typeof geojson}.`,
+    )
   }
-  return geojson;
+  return geojson
 }

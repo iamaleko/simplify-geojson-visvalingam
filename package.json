@@ -35,8 +35,11 @@
   ],
   "scripts": {
     "watch": "tsup --watch",
-    "build": "npm run test && tsup",
-    "test": "mocha"
+    "test": "mocha",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier '**/*.{ts,js,json}' --ignore-path .prettierignore --write",
+    "build": "npm run lint && npm run test && tsup"
   },
   "repository": {
     "type": "git",
@@ -46,9 +49,14 @@
     "@types/assert": "^1.5.11",
     "@types/geojson": "^7946.0.16",
     "@types/mocha": "^10.0.10",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
     "mocha": "^11.1.0",
+    "prettier": "3.5.3",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.30.1"
   }
 }

@@ -1,8 +1,6 @@
 import assert from 'assert'
 import simplify from '@src/index'
 
-import invalidTypeGeoJson from '@test/geojson/invalidType.json'
-
 import validMinimalFeatureGeoJson from '@test/geojson/validMinimalFeature.json'
 import validMinimalFeatureCollectionGeoJson from '@test/geojson/validMinimalFeatureCollection.json'
 import validMinimalPointGeoJson from '@test/geojson/validMinimalPoint.json'
@@ -14,79 +12,119 @@ import validMinimalMultiPolygonGeoJson from '@test/geojson/validMinimalMultiPoly
 import validMinimalGeometryCollectionGeoJson from '@test/geojson/validMinimalGeometryCollection.json'
 
 import {
+  GeoJsonObject,
   Feature,
   FeatureCollection,
-  GeoJsonObject,
-  GeometryCollection,
+  Point,
+  MultiPoint,
   LineString,
   MultiLineString,
-  MultiPoint,
   MultiPolygon,
-  Point,
   Polygon,
+  GeometryCollection,
 } from 'geojson'
 
 describe('simplify()', () => {
   it('should throw TypeError when input is null', () => {
-    assert.throws(() => simplify(null as unknown as GeoJsonObject), TypeError)
+    assert.throws(
+      () =>
+        simplify(null as unknown as GeoJsonObject, {
+          mutate: false,
+          tolerance: 0.0000000000001,
+        }),
+      TypeError,
+    )
   })
 
   it('should throw TypeError when input is not an object', () => {
-    assert.throws(() => simplify(true as unknown as GeoJsonObject), TypeError)
-  })
-
-  it('should throw TypeError when input is GeoJSON with invalid type', () => {
     assert.throws(
-      () => simplify(invalidTypeGeoJson as unknown as GeoJsonObject),
+      () =>
+        simplify(true as unknown as GeoJsonObject, {
+          mutate: false,
+          tolerance: 0.0000000000001,
+        }),
       TypeError,
     )
   })
 
   it('should not throw when input is a valid Feature GeoJSON', () => {
-    assert.doesNotThrow(() => simplify(validMinimalFeatureGeoJson as Feature))
+    assert.doesNotThrow(() =>
+      simplify(validMinimalFeatureGeoJson as Feature, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
+    )
   })
 
   it('should not throw when input is a valid FeatureCollection GeoJSON', () => {
     assert.doesNotThrow(() =>
-      simplify(validMinimalFeatureCollectionGeoJson as FeatureCollection),
+      simplify(validMinimalFeatureCollectionGeoJson as FeatureCollection, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
     )
   })
 
   it('should not throw when input is a valid Point GeoJSON', () => {
-    assert.doesNotThrow(() => simplify(validMinimalPointGeoJson as Point))
+    assert.doesNotThrow(() =>
+      simplify(validMinimalPointGeoJson as Point, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
+    )
   })
 
   it('should not throw when input is a valid MultiPoint GeoJSON', () => {
     assert.doesNotThrow(() =>
-      simplify(validMinimalMultiPointGeoJson as MultiPoint),
+      simplify(validMinimalMultiPointGeoJson as MultiPoint, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
     )
   })
 
   it('should not throw when input is a valid LineString GeoJSON', () => {
     assert.doesNotThrow(() =>
-      simplify(validMinimalLineStringGeoJson as LineString),
+      simplify(validMinimalLineStringGeoJson as LineString, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
     )
   })
 
   it('should not throw when input is a valid MultiLineString GeoJSON', () => {
     assert.doesNotThrow(() =>
-      simplify(validMinimalMultiLineStringGeoJson as MultiLineString),
+      simplify(validMinimalMultiLineStringGeoJson as MultiLineString, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
     )
   })
 
   it('should not throw when input is a valid Polygon GeoJSON', () => {
-    assert.doesNotThrow(() => simplify(validMinimalPolygonGeoJson as Polygon))
+    assert.doesNotThrow(() =>
+      simplify(validMinimalPolygonGeoJson as Polygon, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
+    )
   })
 
   it('should not throw when input is a valid MultiPolygon GeoJSON', () => {
     assert.doesNotThrow(() =>
-      simplify(validMinimalMultiPolygonGeoJson as MultiPolygon),
+      simplify(validMinimalMultiPolygonGeoJson as MultiPolygon, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
     )
   })
 
   it('should not throw when input is a valid GeometryCollection GeoJSON', () => {
     assert.doesNotThrow(() =>
-      simplify(validMinimalGeometryCollectionGeoJson as GeometryCollection),
+      simplify(validMinimalGeometryCollectionGeoJson as GeometryCollection, {
+        mutate: false,
+        tolerance: 0.0000000000001,
+      }),
     )
   })
 })

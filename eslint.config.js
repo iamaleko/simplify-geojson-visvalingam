@@ -7,12 +7,9 @@ export default [
     ignores: ['dist/**', 'node_modules/**'],
   },
   {
-    files: ['src/**/*.{ts}', 'test/**/*.{ts}'],
+    files: ['src/**/*.{ts}', 'test/**/*.{ts}', 'playground/**/*.{ts}'],
     rules: {
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_' },
-      ],
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
   eslintPluginPrettierRecommended,

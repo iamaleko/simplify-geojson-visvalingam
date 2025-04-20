@@ -2,8 +2,6 @@ import {
   GeoJsonObject,
   Feature,
   FeatureCollection,
-  Point,
-  MultiPoint,
   LineString,
   MultiLineString,
   Polygon,
@@ -11,50 +9,40 @@ import {
   GeometryCollection,
 } from 'geojson'
 
+export type FinitePositiveNumber = number & { readonly __type: unique symbol }
+
+export function isFinitePositiveNumber(value: number): value is FinitePositiveNumber {
+  return value != null && Number.isFinite(value) && value > 0
+}
+
 export function isObject(value: object): value is object {
   return typeof value === 'object' && value !== null
 }
 
-export function isFeature(geojson: GeoJsonObject): geojson is Feature {
-  return isObject(geojson) && geojson?.type === 'Feature'
+export function isFeature(value: GeoJsonObject): value is Feature {
+  return isObject(value) && value?.type === 'Feature'
 }
 
-export function isFeatureCollection(
-  geojson: GeoJsonObject,
-): geojson is FeatureCollection {
-  return isObject(geojson) && geojson?.type === 'FeatureCollection'
+export function isFeatureCollection(value: GeoJsonObject): value is FeatureCollection {
+  return isObject(value) && value?.type === 'FeatureCollection'
 }
 
-export function isPoint(geojson: GeoJsonObject): geojson is Point {
-  return isObject(geojson) && geojson?.type === 'Point'
+export function isLineString(value: GeoJsonObject): value is LineString {
+  return isObject(value) && value?.type === 'LineString'
 }
 
-export function isMultiPoint(geojson: GeoJsonObject): geojson is MultiPoint {
-  return isObject(geojson) && geojson?.type === 'MultiPoint'
+export function isMultiLineString(value: GeoJsonObject): value is MultiLineString {
+  return isObject(value) && value?.type === 'MultiLineString'
 }
 
-export function isLineString(geojson: GeoJsonObject): geojson is LineString {
-  return isObject(geojson) && geojson?.type === 'LineString'
+export function isPolygon(value: GeoJsonObject): value is Polygon {
+  return isObject(value) && value?.type === 'Polygon'
 }
 
-export function isMultiLineString(
-  geojson: GeoJsonObject,
-): geojson is MultiLineString {
-  return isObject(geojson) && geojson?.type === 'MultiLineString'
+export function isMultiPolygon(value: GeoJsonObject): value is MultiPolygon {
+  return isObject(value) && value?.type === 'MultiPolygon'
 }
 
-export function isPolygon(geojson: GeoJsonObject): geojson is Polygon {
-  return isObject(geojson) && geojson?.type === 'Polygon'
-}
-
-export function isMultiPolygon(
-  geojson: GeoJsonObject,
-): geojson is MultiPolygon {
-  return isObject(geojson) && geojson?.type === 'MultiPolygon'
-}
-
-export function isGeometryCollection(
-  geojson: GeoJsonObject,
-): geojson is GeometryCollection {
-  return isObject(geojson) && geojson?.type === 'GeometryCollection'
+export function isGeometryCollection(value: GeoJsonObject): value is GeometryCollection {
+  return isObject(value) && value?.type === 'GeometryCollection'
 }

@@ -39,7 +39,8 @@
     "lint": "eslint . --max-warnings=0",
     "lint:fix": "eslint . --fix",
     "format": "prettier '**/*.{ts,js,json}' --ignore-path .prettierignore --write",
-    "build": "npm run lint && npm run test && tsup"
+    "build": "npm run lint && npm run test && tsup",
+    "playground": "npx tsx watch playground/index.ts"
   },
   "repository": {
     "type": "git",

@@ -1,4 +1,5 @@
 import simplify from '@src/index'
+// import simplify from '../dist';
 import { GeoJsonObject } from 'geojson'
 
 /**

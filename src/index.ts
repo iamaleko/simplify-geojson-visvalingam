@@ -27,13 +27,15 @@ type Positions = {
 export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}): GeoJsonObject {
   // validate input data
   if (!isObject(geojson)) {
-    throw new TypeError(`Expected an Object, but received ${typeof geojson}.`)
+    throw new TypeError(
+      `Expected provided GeoJSON to be an object, but received ${geojson === null ? 'null' : typeof geojson}.`,
+    )
   }
 
   // validate options
   let tolerance: FinitePositiveNumber
   if (options.tolerance !== undefined && !isFinitePositiveNumber(options.tolerance)) {
-    throw new Error(`Expected tolerance to be a finite positive number, but received ${options.tolerance}.`)
+    throw new Error(`Expected provided tolerance to be a finite positive number, but received ${options.tolerance}.`)
   } else {
     // exit if no simplification options provided
     if (options.tolerance === undefined) return geojson
@@ -173,7 +175,7 @@ function updateRingPositions(coordinates: Position[], isDeleted: boolean[], inde
       // avoid alternating coordinates array if ring is removed
       return [index, true]
     }
-    coordinates.splice(coordinates.length - 1 - offset, offset, coordinates[0])
+    coordinates.splice(coordinates.length - 1 - offset, offset + 1, coordinates[0])
   }
   return [index, false]
 }

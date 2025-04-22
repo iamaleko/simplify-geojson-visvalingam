@@ -23,11 +23,11 @@ import inPolygon0pGeoJson from '@test/geojson/in/Polygon0p.json'
 import inMultiPolygon0pGeoJson from '@test/geojson/in/MultiPolygon0p.json'
 import inGeometryCollection0pGeoJson from '@test/geojson/in/GeometryCollection0p.json'
 
-import inLineString11p0000000000045163tGeoJson from '@test/geojson/in/LineString11p0000000000045163t.json'
-import outLineString6p0000000000361309tGeoJson from '@test/geojson/out/LineString6p0000000000361309t.json'
+import inLineString11pGeoJson from '@test/geojson/in/LineString11p.json'
+import outLineString6pGeoJson from '@test/geojson/out/LineString6p.json'
 
-import inMultiLineString23p0000000000045163tGeoJson from '@test/geojson/in/MultiLineString23p0000000000045163t.json'
-import outMultyLineString11p0000000000270982tGeoJson from '@test/geojson/out/MultyLineString11p0000000000270982t.json'
+import inMultiLineString23pGeoJson from '@test/geojson/in/MultiLineString23p.json'
+import outMultyLineString13pGeoJson from '@test/geojson/out/MultyLineString13p.json'
 
 describe('simplify() - provided GeoJSON validation', () => {
   it('should throw TypeError when provided GeoJSON is null', () => {
@@ -183,21 +183,21 @@ describe('simplify() - provided options validation', () => {
 describe('simplify() - basic simplification', () => {
   it('should correctly simplify LineString', () => {
     assert.deepStrictEqual(
-      simplify(inLineString11p0000000000045163tGeoJson as GeoJsonObject, {
+      simplify(inLineString11pGeoJson as GeoJsonObject, {
         mutate: false,
         tolerance: 0.00000000001,
       }),
-      outLineString6p0000000000361309tGeoJson,
+      outLineString6pGeoJson,
     )
   })
 
   it('should correctly simplify MultiLineString', () => {
     assert.deepStrictEqual(
-      simplify(inMultiLineString23p0000000000045163tGeoJson as GeoJsonObject, {
+      simplify(inMultiLineString23pGeoJson as GeoJsonObject, {
         mutate: false,
         tolerance: 0.00000000002,
       }),
-      outMultyLineString11p0000000000270982tGeoJson,
+      outMultyLineString13pGeoJson,
     )
   })
 })

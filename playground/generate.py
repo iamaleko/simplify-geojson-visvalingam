@@ -16,36 +16,18 @@ def generate_ring(center_lat, center_lng, radius_meters, num_points):
 
 center = (51.5074, -0.1278)
 print(json.dumps({
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-          "type": "Polygon",
-          "coordinates": [
-            generate_ring(*center, 50, 10),
-            list(reversed(generate_ring(*center, 40, 9)))
-          ]
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-          "type": "Polygon",
-          "coordinates": [
-            generate_ring(*center, 40, 9),
-            list(reversed(generate_ring(*center, 30, 8)))
-          ]
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-          "type": "Polygon",
-          "coordinates": [
-            generate_ring(*center, 30, 8)
-          ]
-      }
-    }
-  ]
+  "type": "MultiPolygon",
+  "coordinates": [
+    [
+      generate_ring(*center, 50, 10),
+      list(reversed(generate_ring(*center, 40, 9)))
+    ],
+    [
+      generate_ring(*center, 40, 9),
+      list(reversed(generate_ring(*center, 30, 8)))
+    ],
+    [
+      generate_ring(*center, 30, 8)
+    ],
+  ],
 }))

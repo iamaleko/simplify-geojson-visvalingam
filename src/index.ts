@@ -63,28 +63,131 @@ export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}):
   return geojson
 }
 
+function getPositionArea(i: number, positions: Positions): number {
+  const [x1, y1] = positions.coordinates[i][positions.coordinatesIndexes[i]]
+  const [x2, y2] = positions.coordinates[i][positions.coordinatesIndexes[positions.prevIndexes[i]]]
+  const [x3, y3] = positions.coordinates[i][positions.coordinatesIndexes[positions.nextIndexes[i]]]
+  return Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2
+}
+
+function heapsink(heap: number[], i: number, priority: number[], positions: Positions): void {
+  let l: number, r: number, t: number
+  while (true) {
+    l = i << 1
+    r = l + 1
+    t = i
+    if (
+      l <= heap[0] &&
+      (priority[heap[t]] > priority[heap[l]] ||
+        (priority[heap[t]] === priority[heap[l]] &&
+          (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] >
+            positions.coordinates[heap[l]][positions.coordinatesIndexes[heap[l]]][0] ||
+            (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] ===
+              positions.coordinates[heap[l]][positions.coordinatesIndexes[heap[l]]][0] &&
+              positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][1] >
+                positions.coordinates[heap[l]][positions.coordinatesIndexes[heap[l]]][1]))))
+    )
+      t = l
+    if (
+      r <= heap[0] &&
+      (priority[heap[t]] > priority[heap[r]] ||
+        (priority[heap[t]] === priority[heap[r]] &&
+          (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] >
+            positions.coordinates[heap[r]][positions.coordinatesIndexes[heap[r]]][0] ||
+            (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] ===
+              positions.coordinates[heap[r]][positions.coordinatesIndexes[heap[r]]][0] &&
+              positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][1] >
+                positions.coordinates[heap[r]][positions.coordinatesIndexes[heap[r]]][1]))))
+    )
+      t = r
+    if (i === t) break
+    ;[heap[i], heap[t], i] = [heap[t], heap[i], t]
+  }
+}
+
+function heapbubble(heap: number[], i: number, priority: number[], positions: Positions): void {
+  let t: number
+  while (i > 0) {
+    t = i >>> 1
+    if (
+      i === t ||
+      priority[heap[t]] < priority[heap[i]] ||
+      (priority[heap[t]] === priority[heap[i]] &&
+        (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] <
+          positions.coordinates[heap[i]][positions.coordinatesIndexes[heap[i]]][0] ||
+          (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] ===
+            positions.coordinates[heap[i]][positions.coordinatesIndexes[heap[i]]][0] &&
+            positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][1] <
+              positions.coordinates[heap[i]][positions.coordinatesIndexes[heap[i]]][1])))
+    )
+      break
+    ;[heap[i], heap[t], i] = [heap[t], heap[i], t]
+  }
+}
+
+function heappop(heap: number[], priority: number[], positions: Positions): number {
+  if (heap[0] > 1) {
+    const data = heap[1]
+    heap[1] = heap[heap[0]]
+    heap[0]--
+    heapsink(heap, 1, priority, positions)
+    return data
+  } else if (heap[0] === 1) {
+    heap[0]--
+    return heap[1]
+  }
+  return -1
+}
+
+function heappush(heap: number[], val: number, priority: number[], positions: Positions): void {
+  heap[++heap[0]] = val
+  heapbubble(heap, heap[0], priority, positions)
+}
+
 function deletePositionsByTolerance(positions: Positions, tolerance: FinitePositiveNumber, isDeleted: boolean[]): void {
-  const n = positions.coordinatesIndexes.length - 1
-  let l = 0
-  let r = 1
-  let x1: number, x2: number, x3: number, y1: number, y2: number, y3: number
-  while (l <= n) {
-    if (!isDeleted[l] && positions.prevIndexes[l] !== -1 && positions.nextIndexes[l] !== -1) {
-      // check if we need to delete current position
-      ;[x1, y1] = positions.coordinates[l][positions.coordinatesIndexes[l]]
-      ;[x2, y2] = positions.coordinates[l][positions.coordinatesIndexes[positions.prevIndexes[l]]]
-      ;[x3, y3] = positions.coordinates[l][positions.coordinatesIndexes[positions.nextIndexes[l]]]
-      if (Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2 < tolerance) {
-        isDeleted[l] = true
-        // update positions linked list
-        positions.prevIndexes[positions.nextIndexes[l]] = positions.prevIndexes[l]
-        positions.nextIndexes[positions.prevIndexes[l]] = positions.nextIndexes[l]
-        // jump to previous position to recheck updated triangle
-        l = positions.prevIndexes[l]
+  const n = positions.coordinatesIndexes.length
+  const priority: number[] = new Array(n).fill(0)
+  const heap: number[] = new Array(n + 1).fill(0)
+  for (let i = 0; i < n; i++) {
+    if (positions.prevIndexes[i] !== -1 && positions.nextIndexes[i] !== -1) {
+      priority[i] = getPositionArea(i, positions)
+      heap[0]++
+      heap[heap[0]] = i
+    }
+  }
+  for (let i = heap[0] >>> 1; i > 0; i--) {
+    heapsink(heap, i, priority, positions)
+  }
+
+  let i: number
+  while (heap[0]) {
+    i = heappop(heap, priority, positions)
+    if (heap[0] && priority[i] > priority[heap[1]]) {
+      continue
+    }
+    if (priority[i] < tolerance) {
+      if (priority[i] === -1) {
+        priority[i] = getPositionArea(i, positions)
         continue
       }
+      isDeleted[i] = true
+      positions.prevIndexes[positions.nextIndexes[i]] = positions.prevIndexes[i]
+      positions.nextIndexes[positions.prevIndexes[i]] = positions.nextIndexes[i]
+      if (
+        positions.prevIndexes[positions.prevIndexes[i]] !== -1 &&
+        positions.nextIndexes[positions.prevIndexes[i]] !== -1
+      ) {
+        priority[positions.prevIndexes[i]] = getPositionArea(positions.prevIndexes[i], positions)
+        heappush(heap, positions.prevIndexes[i], priority, positions)
+      }
+      if (
+        positions.prevIndexes[positions.nextIndexes[i]] !== -1 &&
+        positions.nextIndexes[positions.nextIndexes[i]] !== -1
+      ) {
+        priority[positions.nextIndexes[i]] = getPositionArea(positions.nextIndexes[i], positions)
+        heappush(heap, positions.nextIndexes[i], priority, positions)
+      }
     }
-    l = r++
   }
 }
 

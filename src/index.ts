@@ -18,8 +18,7 @@ export type SimplifyOptions = {
 }
 
 type Positions = {
-  coordinates: Position[][]
-  coordinatesIndexes: number[]
+  coordinates: Position[]
   nextIndexes: number[]
   prevIndexes: number[]
 }
@@ -50,23 +49,22 @@ export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}):
 
   const positions: Positions = {
     coordinates: [],
-    coordinatesIndexes: [],
     nextIndexes: [],
     prevIndexes: [],
   }
 
   collectPositions(geojson, positions)
-  const isDeleted: boolean[] = new Array(positions.coordinatesIndexes.length).fill(false)
+  const isDeleted: boolean[] = new Array(positions.coordinates.length).fill(false)
   deletePositionsByTolerance(positions, tolerance, isDeleted)
-  updatePositions(geojson, positions, isDeleted, 0)
+  updatePositions(geojson, isDeleted, 0)
 
   return geojson
 }
 
 function getPositionArea(i: number, positions: Positions): number {
-  const [x1, y1] = positions.coordinates[i][positions.coordinatesIndexes[i]]
-  const [x2, y2] = positions.coordinates[i][positions.coordinatesIndexes[positions.prevIndexes[i]]]
-  const [x3, y3] = positions.coordinates[i][positions.coordinatesIndexes[positions.nextIndexes[i]]]
+  const [x1, y1] = positions.coordinates[i]
+  const [x2, y2] = positions.coordinates[positions.prevIndexes[i]]
+  const [x3, y3] = positions.coordinates[positions.nextIndexes[i]]
   return Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2
 }
 
@@ -80,24 +78,18 @@ function heapsink(heap: number[], i: number, priority: number[], positions: Posi
       l <= heap[0] &&
       (priority[heap[t]] > priority[heap[l]] ||
         (priority[heap[t]] === priority[heap[l]] &&
-          (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] >
-            positions.coordinates[heap[l]][positions.coordinatesIndexes[heap[l]]][0] ||
-            (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] ===
-              positions.coordinates[heap[l]][positions.coordinatesIndexes[heap[l]]][0] &&
-              positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][1] >
-                positions.coordinates[heap[l]][positions.coordinatesIndexes[heap[l]]][1]))))
+          (positions.coordinates[heap[t]][0] > positions.coordinates[heap[l]][0] ||
+            (positions.coordinates[heap[t]][0] === positions.coordinates[heap[l]][0] &&
+              positions.coordinates[heap[t]][1] > positions.coordinates[heap[l]][1]))))
     )
       t = l
     if (
       r <= heap[0] &&
       (priority[heap[t]] > priority[heap[r]] ||
         (priority[heap[t]] === priority[heap[r]] &&
-          (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] >
-            positions.coordinates[heap[r]][positions.coordinatesIndexes[heap[r]]][0] ||
-            (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] ===
-              positions.coordinates[heap[r]][positions.coordinatesIndexes[heap[r]]][0] &&
-              positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][1] >
-                positions.coordinates[heap[r]][positions.coordinatesIndexes[heap[r]]][1]))))
+          (positions.coordinates[heap[t]][0] > positions.coordinates[heap[r]][0] ||
+            (positions.coordinates[heap[t]][0] === positions.coordinates[heap[r]][0] &&
+              positions.coordinates[heap[t]][1] > positions.coordinates[heap[r]][1]))))
     )
       t = r
     if (i === t) break
@@ -113,12 +105,9 @@ function heapbubble(heap: number[], i: number, priority: number[], positions: Po
       i === t ||
       priority[heap[t]] < priority[heap[i]] ||
       (priority[heap[t]] === priority[heap[i]] &&
-        (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] <
-          positions.coordinates[heap[i]][positions.coordinatesIndexes[heap[i]]][0] ||
-          (positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][0] ===
-            positions.coordinates[heap[i]][positions.coordinatesIndexes[heap[i]]][0] &&
-            positions.coordinates[heap[t]][positions.coordinatesIndexes[heap[t]]][1] <
-              positions.coordinates[heap[i]][positions.coordinatesIndexes[heap[i]]][1])))
+        (positions.coordinates[heap[t]][0] < positions.coordinates[heap[i]][0] ||
+          (positions.coordinates[heap[t]][0] === positions.coordinates[heap[i]][0] &&
+            positions.coordinates[heap[t]][1] < positions.coordinates[heap[i]][1])))
     )
       break
     ;[heap[i], heap[t], i] = [heap[t], heap[i], t]
@@ -145,7 +134,7 @@ function heappush(heap: number[], val: number, priority: number[], positions: Po
 }
 
 function deletePositionsByTolerance(positions: Positions, tolerance: FinitePositiveNumber, isDeleted: boolean[]): void {
-  const n = positions.coordinatesIndexes.length
+  const n = positions.coordinates.length
   const priority: number[] = new Array(n).fill(0)
   const heap: number[] = new Array(n + 1).fill(0)
   for (let i = 0; i < n; i++) {
@@ -191,16 +180,16 @@ function deletePositionsByTolerance(positions: Positions, tolerance: FinitePosit
   }
 }
 
-function updatePositions(geojson: GeoJsonObject, positions: Positions, isDeleted: boolean[], index: number): number {
+function updatePositions(geojson: GeoJsonObject, isDeleted: boolean[], index: number): number {
   if (isFeatureCollection(geojson)) {
     for (let i = 0; i < geojson.features.length; i++) {
-      index = updatePositions(geojson.features[i], positions, isDeleted, index)
+      index = updatePositions(geojson.features[i], isDeleted, index)
     }
   } else if (isFeature(geojson)) {
-    index = updatePositions(geojson.geometry, positions, isDeleted, index)
+    index = updatePositions(geojson.geometry, isDeleted, index)
   } else if (isGeometryCollection(geojson)) {
     for (let i = 0; i < geojson.geometries.length; i++) {
-      index = updatePositions(geojson.geometries[i], positions, isDeleted, index)
+      index = updatePositions(geojson.geometries[i], isDeleted, index)
     }
   } else if (isLineString(geojson)) {
     index = updateLinePositions(geojson.coordinates, isDeleted, index)
@@ -314,18 +303,16 @@ function collectPositions(geojson: GeoJsonObject, positions: Positions): void {
 }
 
 function collectLinePositions(coordinates: Position[], positions: Positions) {
-  for (let p = positions.coordinatesIndexes.length, n = coordinates.length, i = 0; i < n; i++) {
-    positions.coordinates.push(coordinates)
-    positions.coordinatesIndexes.push(i)
+  for (let p = positions.coordinates.length, n = coordinates.length, i = 0; i < n; i++) {
+    positions.coordinates.push(coordinates[i])
     positions.prevIndexes.push(i === 0 ? -1 : p + i - 1)
     positions.nextIndexes.push(i === n - 1 ? -1 : p + i + 1)
   }
 }
 
 function collectRingPositions(coordinates: Position[], positions: Positions) {
-  for (let p = positions.coordinatesIndexes.length, n = coordinates.length - 1, i = 0; i < n; i++) {
-    positions.coordinates.push(coordinates)
-    positions.coordinatesIndexes.push(i)
+  for (let p = positions.coordinates.length, n = coordinates.length - 1, i = 0; i < n; i++) {
+    positions.coordinates.push(coordinates[i])
     positions.prevIndexes.push(i === 0 ? p + n - 1 : p + i - 1)
     positions.nextIndexes.push(i === n - 1 ? p : p + i + 1)
   }

@@ -21,6 +21,9 @@ type Positions = {
   coordinates: Position[]
   nextIndexes: number[]
   prevIndexes: number[]
+  sortIndexes: number[]
+  groupedFrom: number[]
+  groupedTo: number[]
 }
 
 export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}): GeoJsonObject {
@@ -51,24 +54,73 @@ export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}):
     coordinates: [],
     nextIndexes: [],
     prevIndexes: [],
+    sortIndexes: [],
+    groupedFrom: [],
+    groupedTo: [],
   }
 
   collectPositions(geojson, positions)
-  const isDeleted: boolean[] = new Array(positions.coordinates.length).fill(false)
-  deletePositionsByTolerance(positions, tolerance, isDeleted)
-  updatePositions(geojson, isDeleted, 0)
+  if (positions.coordinates.length) {
+    groupPositions(positions)
+    const isDeleted: Uint8Array = new Uint8Array(positions.coordinates.length)
+    deletePositions(positions, tolerance, isDeleted)
+    updatePositions(geojson, isDeleted, 0)
+  }
 
   return geojson
 }
 
-function getPositionArea(i: number, positions: Positions): number {
-  const [x1, y1] = positions.coordinates[i]
-  const [x2, y2] = positions.coordinates[positions.prevIndexes[i]]
-  const [x3, y3] = positions.coordinates[positions.nextIndexes[i]]
-  return Math.abs(x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2
+function groupPositions(positions: Positions): void {
+  positions.sortIndexes = [...new Array(positions.coordinates.length).keys()]
+  positions.sortIndexes.sort((a, b) => {
+    return (
+      positions.coordinates[a][0] - positions.coordinates[b][0] ||
+      positions.coordinates[a][1] - positions.coordinates[b][1]
+    )
+  })
+
+  positions.groupedFrom = new Array(positions.coordinates.length).fill(0)
+  positions.groupedTo = new Array(positions.coordinates.length).fill(positions.sortIndexes.length - 1)
+  for (let i = 1, j = positions.sortIndexes.length - 2; i < positions.sortIndexes.length; i++, j--) {
+    if (
+      positions.coordinates[positions.sortIndexes[i]][0] !== positions.coordinates[positions.sortIndexes[i - 1]][0] ||
+      positions.coordinates[positions.sortIndexes[i]][1] !== positions.coordinates[positions.sortIndexes[i - 1]][1]
+    ) {
+      positions.groupedFrom[positions.sortIndexes[i]] = i
+    } else {
+      positions.groupedFrom[positions.sortIndexes[i]] = positions.groupedFrom[positions.sortIndexes[i - 1]]
+    }
+    if (
+      positions.coordinates[positions.sortIndexes[j]][0] !== positions.coordinates[positions.sortIndexes[j + 1]][0] ||
+      positions.coordinates[positions.sortIndexes[j]][1] !== positions.coordinates[positions.sortIndexes[j + 1]][1]
+    ) {
+      positions.groupedTo[positions.sortIndexes[j]] = j
+    } else {
+      positions.groupedTo[positions.sortIndexes[j]] = positions.groupedTo[positions.sortIndexes[j + 1]]
+    }
+  }
 }
 
-function heapsink(heap: number[], i: number, priority: number[], positions: Positions): void {
+function getPositionArea(i: number, positions: Positions): number {
+  return (
+    Math.abs(
+      positions.coordinates[i][0] *
+        (positions.coordinates[positions.prevIndexes[i]][1] - positions.coordinates[positions.nextIndexes[i]][1]) +
+        positions.coordinates[positions.prevIndexes[i]][0] *
+          (positions.coordinates[positions.nextIndexes[i]][1] - positions.coordinates[i][1]) +
+        positions.coordinates[positions.nextIndexes[i]][0] *
+          (positions.coordinates[i][1] - positions.coordinates[positions.prevIndexes[i]][1]),
+    ) / 2
+  )
+}
+
+function heapsink(
+  heap: Uint32Array,
+  heapRev: Uint32Array,
+  i: number,
+  priority: Float64Array,
+  coordinates: Position[],
+): number {
   let l: number, r: number, t: number
   while (true) {
     l = i << 1
@@ -78,49 +130,76 @@ function heapsink(heap: number[], i: number, priority: number[], positions: Posi
       l <= heap[0] &&
       (priority[heap[t]] > priority[heap[l]] ||
         (priority[heap[t]] === priority[heap[l]] &&
-          (positions.coordinates[heap[t]][0] > positions.coordinates[heap[l]][0] ||
-            (positions.coordinates[heap[t]][0] === positions.coordinates[heap[l]][0] &&
-              positions.coordinates[heap[t]][1] > positions.coordinates[heap[l]][1]))))
-    )
+          (coordinates[heap[t]][0] > coordinates[heap[l]][0] ||
+            (coordinates[heap[t]][0] === coordinates[heap[l]][0] &&
+              coordinates[heap[t]][1] > coordinates[heap[l]][1]))))
+    ) {
       t = l
+    }
     if (
       r <= heap[0] &&
       (priority[heap[t]] > priority[heap[r]] ||
         (priority[heap[t]] === priority[heap[r]] &&
-          (positions.coordinates[heap[t]][0] > positions.coordinates[heap[r]][0] ||
-            (positions.coordinates[heap[t]][0] === positions.coordinates[heap[r]][0] &&
-              positions.coordinates[heap[t]][1] > positions.coordinates[heap[r]][1]))))
-    )
+          (coordinates[heap[t]][0] > coordinates[heap[r]][0] ||
+            (coordinates[heap[t]][0] === coordinates[heap[r]][0] &&
+              coordinates[heap[t]][1] > coordinates[heap[r]][1]))))
+    ) {
       t = r
+    }
     if (i === t) break
-    ;[heap[i], heap[t], i] = [heap[t], heap[i], t]
+    heapswap(heap, heapRev, i, t)
+    i = t
   }
+  return i
 }
 
-function heapbubble(heap: number[], i: number, priority: number[], positions: Positions): void {
+function heapbubble(
+  heap: Uint32Array,
+  heapRev: Uint32Array,
+  i: number,
+  priority: Float64Array,
+  coordinates: Position[],
+): number {
   let t: number
-  while (i > 0) {
+  while (i > 1) {
     t = i >>> 1
     if (
       i === t ||
       priority[heap[t]] < priority[heap[i]] ||
       (priority[heap[t]] === priority[heap[i]] &&
-        (positions.coordinates[heap[t]][0] < positions.coordinates[heap[i]][0] ||
-          (positions.coordinates[heap[t]][0] === positions.coordinates[heap[i]][0] &&
-            positions.coordinates[heap[t]][1] < positions.coordinates[heap[i]][1])))
-    )
+        (coordinates[heap[t]][0] < coordinates[heap[i]][0] ||
+          (coordinates[heap[t]][0] === coordinates[heap[i]][0] && coordinates[heap[t]][1] < coordinates[heap[i]][1])))
+    ) {
       break
-    ;[heap[i], heap[t], i] = [heap[t], heap[i], t]
+    }
+    heapswap(heap, heapRev, i, t)
+    i = t
   }
+  return i
 }
 
-function heappop(heap: number[], priority: number[], positions: Positions): number {
+function heapupdate(
+  heap: Uint32Array,
+  heapRev: Uint32Array,
+  val: number,
+  priority: Float64Array,
+  coordinates: Position[],
+): void {
+  heapbubble(heap, heapRev, heapsink(heap, heapRev, heapRev[val], priority, coordinates), priority, coordinates)
+}
+
+function heapswap(heap: Uint32Array, heapRev: Uint32Array, i: number, t: number): void {
+  heapRev[heap[i]] = t
+  heapRev[heap[t]] = i
+  ;[heap[i], heap[t]] = [heap[t], heap[i]]
+}
+
+function heappop(heap: Uint32Array, heapRev: Uint32Array, priority: Float64Array, coordinates: Position[]): number {
   if (heap[0] > 1) {
-    const data = heap[1]
-    heap[1] = heap[heap[0]]
+    heapswap(heap, heapRev, 1, heap[0])
     heap[0]--
-    heapsink(heap, 1, priority, positions)
-    return data
+    heapsink(heap, heapRev, 1, priority, coordinates)
+    return heap[heap[0] + 1]
   } else if (heap[0] === 1) {
     heap[0]--
     return heap[1]
@@ -128,59 +207,115 @@ function heappop(heap: number[], priority: number[], positions: Positions): numb
   return -1
 }
 
-function heappush(heap: number[], val: number, priority: number[], positions: Positions): void {
-  heap[++heap[0]] = val
-  heapbubble(heap, heap[0], priority, positions)
+function heapify(heap: Uint32Array, heapRev: Uint32Array, priority: Float64Array, coordinates: Position[]): void {
+  for (let i = heap[0] >>> 1; i > 0; i--) {
+    heapsink(heap, heapRev, i, priority, coordinates)
+  }
 }
 
-function deletePositionsByTolerance(positions: Positions, tolerance: FinitePositiveNumber, isDeleted: boolean[]): void {
+function deletePositions(positions: Positions, tolerance: FinitePositiveNumber, isDeleted: Uint8Array): void {
   const n = positions.coordinates.length
-  const priority: number[] = new Array(n).fill(0)
-  const heap: number[] = new Array(n + 1).fill(0)
+
+  const candidatesByGroupFrom: Uint32Array = new Uint32Array(n)
+  const isCandidate: Uint8Array = new Uint8Array(n)
+
+  const heap: Uint32Array = new Uint32Array(n + 1)
+  const priority: Float64Array = new Float64Array(n)
+  const heapRev: Uint32Array = new Uint32Array(n)
   for (let i = 0; i < n; i++) {
     if (positions.prevIndexes[i] !== -1 && positions.nextIndexes[i] !== -1) {
       priority[i] = getPositionArea(i, positions)
       heap[0]++
       heap[heap[0]] = i
+      heapRev[i] = heap[0]
     }
   }
-  for (let i = heap[0] >>> 1; i > 0; i--) {
-    heapsink(heap, i, priority, positions)
-  }
+  heapify(heap, heapRev, priority, positions.coordinates)
 
   let i: number
   while (heap[0]) {
-    i = heappop(heap, priority, positions)
-    if (heap[0] && priority[i] > priority[heap[1]]) {
+    i = heappop(heap, heapRev, priority, positions.coordinates)
+
+    // check if position should be skipped
+    if (isDeleted[i]) {
       continue
     }
-    if (priority[i] < tolerance) {
-      if (priority[i] === -1) {
-        priority[i] = getPositionArea(i, positions)
+
+    // check if simplification is completed
+    if (priority[i] >= tolerance) {
+      break
+    }
+
+    // mark as candidate
+    if (!isCandidate[i]) {
+      isCandidate[i] = 1
+      candidatesByGroupFrom[positions.groupedFrom[i]]++
+    }
+
+    // check if position is grouped and group is not entirely marked
+    if (candidatesByGroupFrom[positions.groupedFrom[i]] !== positions.groupedTo[i] - positions.groupedFrom[i] + 1) {
+      continue
+    }
+
+    // delete all positions from group
+    // possible bug: in ring with two idetical positions (!!) test case needed
+    for (let k: number, j = positions.groupedFrom[i]; j <= positions.groupedTo[i]; j++) {
+      k = positions.sortIndexes[j]
+      if (isDeleted[k]) {
         continue
       }
-      isDeleted[i] = true
-      positions.prevIndexes[positions.nextIndexes[i]] = positions.prevIndexes[i]
-      positions.nextIndexes[positions.prevIndexes[i]] = positions.nextIndexes[i]
+
+      // check if we are about to delete the entire ring or a single position
       if (
-        positions.prevIndexes[positions.prevIndexes[i]] !== -1 &&
-        positions.nextIndexes[positions.prevIndexes[i]] !== -1
+        positions.prevIndexes[k] !== -1 &&
+        positions.prevIndexes[positions.prevIndexes[k]] !== -1 &&
+        positions.prevIndexes[positions.prevIndexes[positions.prevIndexes[k]]] === k
       ) {
-        priority[positions.prevIndexes[i]] = getPositionArea(positions.prevIndexes[i], positions)
-        heappush(heap, positions.prevIndexes[i], priority, positions)
-      }
-      if (
-        positions.prevIndexes[positions.nextIndexes[i]] !== -1 &&
-        positions.nextIndexes[positions.nextIndexes[i]] !== -1
-      ) {
-        priority[positions.nextIndexes[i]] = getPositionArea(positions.nextIndexes[i], positions)
-        heappush(heap, positions.nextIndexes[i], priority, positions)
+        // mark neighbors as candidates if not yet
+        if (!isCandidate[positions.prevIndexes[k]]) {
+          isCandidate[positions.prevIndexes[k]] = 1
+          candidatesByGroupFrom[positions.groupedFrom[positions.prevIndexes[k]]]++
+        }
+        if (!isCandidate[positions.nextIndexes[k]]) {
+          isCandidate[positions.nextIndexes[k]] = 1
+          candidatesByGroupFrom[positions.groupedFrom[positions.nextIndexes[k]]]++
+        }
+
+        // remove entire ring if neighbor groups are entirely marked
+        if (
+          candidatesByGroupFrom[positions.groupedFrom[positions.prevIndexes[k]]] ===
+            positions.groupedTo[positions.prevIndexes[k]] - positions.groupedFrom[positions.prevIndexes[k]] + 1 &&
+          candidatesByGroupFrom[positions.groupedFrom[positions.nextIndexes[k]]] ===
+            positions.groupedTo[positions.nextIndexes[k]] - positions.groupedFrom[positions.nextIndexes[k]] + 1
+        ) {
+          isDeleted[k] = 1
+          isDeleted[positions.nextIndexes[k]] = 1
+          isDeleted[positions.prevIndexes[k]] = 1
+
+          // repeat to delete all matching rings
+          // possible optimization
+          j = positions.groupedFrom[i] - 1
+        }
+      } else {
+        isDeleted[k] = 1
+        positions.prevIndexes[positions.nextIndexes[k]] = positions.prevIndexes[k]
+        positions.nextIndexes[positions.prevIndexes[k]] = positions.nextIndexes[k]
+
+        // update neighbors priority and their positions in the heap
+        if (positions.prevIndexes[positions.prevIndexes[k]] !== -1) {
+          priority[positions.prevIndexes[k]] = getPositionArea(positions.prevIndexes[k], positions)
+          heapupdate(heap, heapRev, positions.prevIndexes[k], priority, positions.coordinates)
+        }
+        if (positions.nextIndexes[positions.nextIndexes[k]] !== -1) {
+          priority[positions.nextIndexes[k]] = getPositionArea(positions.nextIndexes[k], positions)
+          heapupdate(heap, heapRev, positions.nextIndexes[k], priority, positions.coordinates)
+        }
       }
     }
   }
 }
 
-function updatePositions(geojson: GeoJsonObject, isDeleted: boolean[], index: number): number {
+function updatePositions(geojson: GeoJsonObject, isDeleted: Uint8Array, index: number): number {
   if (isFeatureCollection(geojson)) {
     for (let i = 0; i < geojson.features.length; i++) {
       index = updatePositions(geojson.features[i], isDeleted, index)
@@ -216,7 +351,7 @@ function updatePositions(geojson: GeoJsonObject, isDeleted: boolean[], index: nu
   return index
 }
 
-function updateLinePositions(coordinates: Position[], isDeleted: boolean[], index: number): number {
+function updateLinePositions(coordinates: Position[], isDeleted: Uint8Array, index: number): number {
   let offset = 0
   for (let i = 0; i < coordinates.length; i++) {
     if (isDeleted[index]) {
@@ -230,7 +365,7 @@ function updateLinePositions(coordinates: Position[], isDeleted: boolean[], inde
   return index
 }
 
-function updateRingsPositions(coordinates: Position[][], isDeleted: boolean[], index: number): [number, boolean] {
+function updateRingsPositions(coordinates: Position[][], isDeleted: Uint8Array, index: number): [number, boolean] {
   let offset = 0
   for (let remove = false, i = 0; i < coordinates.length; i++) {
     ;[index, remove] = updateRingPositions(coordinates[i], isDeleted, index)
@@ -252,7 +387,7 @@ function updateRingsPositions(coordinates: Position[][], isDeleted: boolean[], i
   return [index, false]
 }
 
-function updateRingPositions(coordinates: Position[], isDeleted: boolean[], index: number): [number, boolean] {
+function updateRingPositions(coordinates: Position[], isDeleted: Uint8Array, index: number): [number, boolean] {
   let offset = 0
   for (let i = 0; i < coordinates.length - 1; i++) {
     if (isDeleted[index]) {

@@ -241,7 +241,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
     )
   })
 
-  it('should correctly simplify simple MultiLineString', () => {
+  it('should correctly simplify small MultiLineString', () => {
     assert.deepStrictEqual(
       simplify(inSmallMultiLineStringNoCommonPositions as GeoJsonObject, {
         mutate: false,

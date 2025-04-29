@@ -1,0 +1,58 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          { "type": "Point", "coordinates": [1, 1] },
+          {
+            "type": "MultiPoint",
+            "coordinates": [
+              [2, 2],
+              [3, 3]
+            ]
+          },
+          {
+            "type": "LineString",
+            "coordinates": [
+              [4, 4],
+              [7, 7]
+            ]
+          },
+          {
+            "type": "MultiLineString",
+            "coordinates": [
+              [
+                [8, 8],
+                [10, 10]
+              ],
+              [
+                [11, 11],
+                [15, 15]
+              ]
+            ]
+          }
+        ]
+      },
+      "properties": {}
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Polygon", "coordinates": [] },
+      "properties": { "comment": "3 points polygon" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Polygon", "coordinates": [] },
+      "properties": { "comment": "4 points polygon with hole" }
+    },
+    { "type": "Feature", "geometry": { "type": "MultiPolygon", "coordinates": [] }, "properties": {} },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Polygon", "coordinates": [] },
+      "properties": { "comment": "4 points polygon" }
+    }
+  ]
+}

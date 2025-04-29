@@ -2,36 +2,49 @@ import simplify from '@src/index'
 // import simplify from '../dist';
 import { GeoJsonObject } from 'geojson'
 
-import inLineString11pGeoJson from '@test/geojson/in/LineString11p.json'
+import inAllTypesNoCommonPositionsRemoveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsRemoveAllPositions.json'
 if (0) {
   console.log(
     JSON.stringify(
-      simplify(inLineString11pGeoJson as GeoJsonObject, {
-        tolerance: 0.00000000001,
+      simplify(inAllTypesNoCommonPositionsRemoveAllPositions as GeoJsonObject, {
+        tolerance: 1e6,
       }),
     ),
   )
 }
 
-import inMultiLineString23pGeoJson from '@test/geojson/in/MultiLineString23p.json'
+import inAllTypesNoCommonPositionsLeaveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsLeaveAllPositions.json'
 if (0) {
   console.log(
     JSON.stringify(
-      simplify(inMultiLineString23pGeoJson as GeoJsonObject, {
-        tolerance: 0.00000000002,
+      simplify(inAllTypesNoCommonPositionsLeaveAllPositions as GeoJsonObject, {
+        tolerance: 0.00000002422,
       }),
     ),
   )
 }
 
-import inMultiPolygon44pGeoJson from '@test/geojson/in/MultiPolygon44p.json'
+import inSmallLineStringNoCommonPositions from '@test/geojson/in/smallLineStringNoCommonPositions.json'
 if (0) {
   console.log(
     JSON.stringify(
-      simplify(inMultiPolygon44pGeoJson as GeoJsonObject, {
-        // tolerance: 0.00000003,
-        // tolerance: 0.00000004, // so-so
-        tolerance: 0.00000008,
+      simplify(inSmallLineStringNoCommonPositions as GeoJsonObject, {
+        // tolerance: 0.000000000004, // leave all
+        tolerance: 0.000000000005, // remove part
+        // tolerance: 0.000000000542, // remove all except starting points
+      }),
+    ),
+  )
+}
+
+import inSmallMultiLineStringNoCommonPositions from '@test/geojson/in/smallMultiLineStringNoCommonPositions.json'
+if (0) {
+  console.log(
+    JSON.stringify(
+      simplify(inSmallMultiLineStringNoCommonPositions as GeoJsonObject, {
+        // tolerance: 0.000000000004, // leave all
+        tolerance: 0.000000000005, // remove part
+        // tolerance: 0.000000000542, // remove all except starting points
       }),
     ),
   )

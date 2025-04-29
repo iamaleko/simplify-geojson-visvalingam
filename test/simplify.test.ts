@@ -13,21 +13,24 @@ import {
   GeometryCollection,
 } from 'geojson'
 
-import inFeature0pGeoJson from '@test/geojson/in/Feature0p.json'
-import inFeatureCollection0pGeoJson from '@test/geojson/in/FeatureCollection0p.json'
-import inPoint0pGeoJson from '@test/geojson/in/Point0p.json'
-import inMultiPoint0pGeoJson from '@test/geojson/in/MultiPoint0p.json'
-import inLineString0pGeoJson from '@test/geojson/in/LineString0p.json'
-import inMultiLineString0pGeoJson from '@test/geojson/in/MultiLineString0p.json'
-import inPolygon0pGeoJson from '@test/geojson/in/Polygon0p.json'
-import inMultiPolygon0pGeoJson from '@test/geojson/in/MultiPolygon0p.json'
-import inGeometryCollection0pGeoJson from '@test/geojson/in/GeometryCollection0p.json'
+import inMinimalFeature from '@test/geojson/in/minimalFeature.json'
+import inMinimalFeatureCollection from '@test/geojson/in/minimalFeatureCollection.json'
+import inMinimalPoint from '@test/geojson/in/minimalPoint.json'
+import inMinimalMultiPoint from '@test/geojson/in/minimalMultiPoint.json'
+import inMinimalLineString from '@test/geojson/in/minimalLineString.json'
+import inMinimalMultiLineString from '@test/geojson/in/minimalMultiLineString.json'
+import inMinimalPolygon from '@test/geojson/in/minimalPolygon.json'
+import inMinimalMultiPolygon from '@test/geojson/in/minimalMultiPolygon.json'
+import inMinimalGeometryCollection from '@test/geojson/in/minimalGeometryCollection.json'
 
-import inLineString11pGeoJson from '@test/geojson/in/LineString11p.json'
-import outLineString6pGeoJson from '@test/geojson/out/LineString6p.json'
-
-import inMultiLineString23pGeoJson from '@test/geojson/in/MultiLineString23p.json'
-import outMultyLineString13pGeoJson from '@test/geojson/out/MultyLineString13p.json'
+import inAllTypesNoCommonPositionsRemoveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsRemoveAllPositions.json'
+import outAllTypesNoCommonPositionsRemoveAllPositions from '@test/geojson/out/allTypesNoCommonPositionsRemoveAllPositions.json'
+import inAllTypesNoCommonPositionsLeaveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsLeaveAllPositions.json'
+import outAllTypesNoCommonPositionsLeaveAllPositions from '@test/geojson/out/allTypesNoCommonPositionsLeaveAllPositions.json'
+import inSmallLineStringNoCommonPositions from '@test/geojson/in/smallLineStringNoCommonPositions.json'
+import outSmallLineStringNoCommonPositions from '@test/geojson/out/smallLineStringNoCommonPositions.json'
+import inSmallMultiLineStringNoCommonPositions from '@test/geojson/in/smallMultiLineStringNoCommonPositions.json'
+import outSmallMultiLineStringNoCommonPositions from '@test/geojson/out/smallMultiLineStringNoCommonPositions.json'
 
 describe('simplify() - provided GeoJSON validation', () => {
   it('should throw TypeError when provided GeoJSON is null', () => {
@@ -35,7 +38,7 @@ describe('simplify() - provided GeoJSON validation', () => {
       () =>
         simplify(null as unknown as GeoJsonObject, {
           mutate: false,
-          tolerance: 0.0000000000001,
+          tolerance: 1,
         }),
       new TypeError(`Expected provided GeoJSON to be an object, but received null.`),
     )
@@ -46,89 +49,89 @@ describe('simplify() - provided GeoJSON validation', () => {
       () =>
         simplify(true as unknown as GeoJsonObject, {
           mutate: false,
-          tolerance: 0.0000000000001,
+          tolerance: 1,
         }),
       new TypeError(`Expected provided GeoJSON to be an object, but received boolean.`),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid Feature', () => {
+  it('should not throw when provided GeoJSON is a valid minimal Feature', () => {
     assert.doesNotThrow(() =>
-      simplify(inFeature0pGeoJson as Feature, {
+      simplify(inMinimalFeature as Feature, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid FeatureCollection', () => {
+  it('should not throw when provided GeoJSON is a valid minimal FeatureCollection', () => {
     assert.doesNotThrow(() =>
-      simplify(inFeatureCollection0pGeoJson as FeatureCollection, {
+      simplify(inMinimalFeatureCollection as FeatureCollection, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid Point', () => {
+  it('should not throw when provided GeoJSON is a valid minimal Point', () => {
     assert.doesNotThrow(() =>
-      simplify(inPoint0pGeoJson as Point, {
+      simplify(inMinimalPoint as Point, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid MultiPoint', () => {
+  it('should not throw when provided GeoJSON is a valid minimal MultiPoint', () => {
     assert.doesNotThrow(() =>
-      simplify(inMultiPoint0pGeoJson as MultiPoint, {
+      simplify(inMinimalMultiPoint as MultiPoint, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid LineString', () => {
+  it('should not throw when provided GeoJSON is a valid minimal LineString', () => {
     assert.doesNotThrow(() =>
-      simplify(inLineString0pGeoJson as LineString, {
+      simplify(inMinimalLineString as LineString, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid MultiLineString', () => {
+  it('should not throw when provided GeoJSON is a valid minimal MultiLineString', () => {
     assert.doesNotThrow(() =>
-      simplify(inMultiLineString0pGeoJson as MultiLineString, {
+      simplify(inMinimalMultiLineString as MultiLineString, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid Polygon', () => {
+  it('should not throw when provided GeoJSON is a valid minimal Polygon', () => {
     assert.doesNotThrow(() =>
-      simplify(inPolygon0pGeoJson as Polygon, {
+      simplify(inMinimalPolygon as Polygon, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid MultiPolygon', () => {
+  it('should not throw when provided GeoJSON is a valid minimal MultiPolygon', () => {
     assert.doesNotThrow(() =>
-      simplify(inMultiPolygon0pGeoJson as MultiPolygon, {
+      simplify(inMinimalMultiPolygon as MultiPolygon, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
 
-  it('should not throw when provided GeoJSON is a valid GeometryCollection', () => {
+  it('should not throw when provided GeoJSON is a valid minimal GeometryCollection', () => {
     assert.doesNotThrow(() =>
-      simplify(inGeometryCollection0pGeoJson as GeometryCollection, {
+      simplify(inMinimalGeometryCollection as GeometryCollection, {
         mutate: false,
-        tolerance: 0.0000000000001,
+        tolerance: 1,
       }),
     )
   })
@@ -138,7 +141,7 @@ describe('simplify() - provided options validation', () => {
   it('should throw Error when provided tolerance is not a number', () => {
     assert.throws(
       () =>
-        simplify(inFeature0pGeoJson as GeoJsonObject, {
+        simplify(inMinimalFeature as Feature, {
           mutate: false,
           tolerance: true as unknown as number,
         }),
@@ -149,7 +152,7 @@ describe('simplify() - provided options validation', () => {
   it('should throw Error when provided tolerance is less than 0', () => {
     assert.throws(
       () =>
-        simplify(inFeature0pGeoJson as GeoJsonObject, {
+        simplify(inMinimalFeature as Feature, {
           mutate: false,
           tolerance: -1,
         }),
@@ -160,7 +163,7 @@ describe('simplify() - provided options validation', () => {
   it('should throw Error when provided tolerance is equal to 0', () => {
     assert.throws(
       () =>
-        simplify(inFeature0pGeoJson as GeoJsonObject, {
+        simplify(inMinimalFeature as Feature, {
           mutate: false,
           tolerance: 0,
         }),
@@ -171,33 +174,80 @@ describe('simplify() - provided options validation', () => {
   it('should throw Error when provided tolerance is infinite', () => {
     assert.throws(
       () =>
-        simplify(inFeature0pGeoJson as GeoJsonObject, {
+        simplify(inMinimalFeature as Feature, {
           mutate: false,
           tolerance: Infinity,
         }),
       new Error(`Expected provided tolerance to be a finite positive number, but received Infinity.`),
     )
   })
-})
 
-describe('simplify() - basic simplification', () => {
-  it('should correctly simplify LineString', () => {
-    assert.deepStrictEqual(
-      simplify(inLineString11pGeoJson as GeoJsonObject, {
-        mutate: false,
-        tolerance: 0.00000000001,
-      }),
-      outLineString6pGeoJson,
+  it('should throw Error when tolerance is not provided', () => {
+    assert.throws(
+      () =>
+        simplify(inMinimalFeature as Feature, {
+          mutate: false,
+        }),
+      new Error(`Expected provided tolerance to be a finite positive number, but received undefined.`),
     )
   })
 
-  it('should correctly simplify MultiLineString', () => {
-    assert.deepStrictEqual(
-      simplify(inMultiLineString23pGeoJson as GeoJsonObject, {
-        mutate: false,
-        tolerance: 0.00000000002,
+  it('should not throw when provided mutate is not a boolean', () => {
+    assert.doesNotThrow(() =>
+      simplify(inMinimalFeature as Feature, {
+        mutate: null as unknown as boolean,
+        tolerance: 1,
       }),
-      outMultyLineString13pGeoJson,
+    )
+  })
+
+  it('should not throw when mutate is not provided', () => {
+    assert.doesNotThrow(() =>
+      simplify(inMinimalFeature as Feature, {
+        tolerance: 1,
+      }),
+    )
+  })
+})
+
+describe('simplify() - simplification by tolerance without common positions', () => {
+  it('should remove all positions except points when provided tolerance is huge', () => {
+    assert.deepStrictEqual(
+      simplify(inAllTypesNoCommonPositionsRemoveAllPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 1e6,
+      }),
+      outAllTypesNoCommonPositionsRemoveAllPositions,
+    )
+  })
+
+  it('should leave all positions except points when provided tolerance is tiny', () => {
+    assert.deepStrictEqual(
+      simplify(inAllTypesNoCommonPositionsLeaveAllPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 0.00000002422,
+      }),
+      outAllTypesNoCommonPositionsLeaveAllPositions,
+    )
+  })
+
+  it('should correctly simplify small LineString', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallLineStringNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 0.000000000005,
+      }),
+      outSmallLineStringNoCommonPositions,
+    )
+  })
+
+  it('should correctly simplify simple MultiLineString', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallMultiLineStringNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 0.000000000005,
+      }),
+      outSmallMultiLineStringNoCommonPositions,
     )
   })
 })

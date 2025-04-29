@@ -182,13 +182,11 @@ describe('simplify() - provided options validation', () => {
     )
   })
 
-  it('should throw Error when tolerance is not provided', () => {
-    assert.throws(
-      () =>
-        simplify(inMinimalFeature as Feature, {
-          mutate: false,
-        }),
-      new Error(`Expected provided tolerance to be a finite positive number, but received undefined.`),
+  it('should not throw when tolerance is not provided', () => {
+    assert.doesNotThrow(() =>
+      simplify(inMinimalFeature as Feature, {
+        mutate: false,
+      }),
     )
   })
 
@@ -221,11 +219,20 @@ describe('simplify() - simplification by tolerance without common positions', ()
     )
   })
 
-  it('should leave all positions except points when provided tolerance is tiny', () => {
+  it('should leave all positions when provided tolerance is tiny', () => {
     assert.deepStrictEqual(
       simplify(inAllTypesNoCommonPositionsLeaveAllPositions as GeoJsonObject, {
         mutate: false,
         tolerance: 0.00000002422,
+      }),
+      outAllTypesNoCommonPositionsLeaveAllPositions,
+    )
+  })
+
+  it('should leave all positions when tolerance is not provided', () => {
+    assert.deepStrictEqual(
+      simplify(inAllTypesNoCommonPositionsLeaveAllPositions as GeoJsonObject, {
+        mutate: false,
       }),
       outAllTypesNoCommonPositionsLeaveAllPositions,
     )

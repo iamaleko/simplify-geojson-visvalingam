@@ -36,9 +36,11 @@ export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}):
 
   // validate options
   let tolerance: FinitePositiveNumber
-  if (options.tolerance === undefined || !isFinitePositiveNumber(options.tolerance)) {
+  if (options.tolerance !== undefined && !isFinitePositiveNumber(options.tolerance)) {
     throw new Error(`Expected provided tolerance to be a finite positive number, but received ${options.tolerance}.`)
   } else {
+    // exit if no simplification options provided
+    if (options.tolerance === undefined) return geojson
     tolerance = options.tolerance
   }
   let mutate = true

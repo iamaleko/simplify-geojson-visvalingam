@@ -6,6 +6,13 @@
       "geometry": {
         "type": "GeometryCollection",
         "geometries": [
+          {
+            "type": "LineString",
+            "coordinates": [
+              [-2.127077553003249, 51.5074],
+              [-2.8280889787987005, 51.50771153414276]
+            ]
+          },
           { "type": "Point", "coordinates": [-2.127077553003249, 51.5074] },
           {
             "type": "MultiPoint",
@@ -40,6 +47,22 @@
     },
     { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [] }, "properties": {} },
     { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [] }, "properties": {} },
-    { "type": "Feature", "geometry": { "type": "MultiPolygon", "coordinates": [] }, "properties": {} }
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-2.8273572587941525, 51.50763122911416],
+              [-2.8280889787987005, 51.50771153414276],
+              [-2.8280889787987005, 51.50708846585724],
+              [-2.8273572587941525, 51.50763122911416]
+            ]
+          ]
+        ]
+      },
+      "properties": {}
+    }
   ]
 }

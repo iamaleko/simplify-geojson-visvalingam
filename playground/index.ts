@@ -2,22 +2,12 @@ import simplify from '@src/index'
 // import simplify from '../dist';
 import { GeoJsonObject } from 'geojson'
 
-import inAllTypesNoCommonPositionsRemoveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsRemoveAllPositions.json'
+import inAllTypesNoCommonPositions from '@test/geojson/in/allTypesNoCommonPositions.json'
 if (0) {
   console.log(
     JSON.stringify(
-      simplify(inAllTypesNoCommonPositionsRemoveAllPositions as GeoJsonObject, {
-        tolerance: 1e6,
-      }),
-    ),
-  )
-}
-
-import inAllTypesNoCommonPositionsLeaveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsLeaveAllPositions.json'
-if (0) {
-  console.log(
-    JSON.stringify(
-      simplify(inAllTypesNoCommonPositionsLeaveAllPositions as GeoJsonObject, {
+      simplify(inAllTypesNoCommonPositions as GeoJsonObject, {
+        // tolerance: 1e6,
         tolerance: 0.00000002422,
       }),
     ),
@@ -79,6 +69,18 @@ if (0) {
     JSON.stringify(
       simplify(inSmallFeatureCollectionNoCommonPositions as GeoJsonObject, {
         tolerance: 0.000000037, // remove part
+      }),
+    ),
+  )
+}
+
+import inAllTypesWithCommonPositions from '@test/geojson/in/allTypesWithCommonPositions.json'
+if (0) {
+  console.log(
+    JSON.stringify(
+      simplify(inAllTypesWithCommonPositions as GeoJsonObject, {
+        tolerance: 1e6,
+        // tolerance: 0.00000002422,
       }),
     ),
   )

@@ -23,9 +23,8 @@ import inMinimalPolygon from '@test/geojson/in/minimalPolygon.json'
 import inMinimalMultiPolygon from '@test/geojson/in/minimalMultiPolygon.json'
 import inMinimalGeometryCollection from '@test/geojson/in/minimalGeometryCollection.json'
 
-import inAllTypesNoCommonPositionsRemoveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsRemoveAllPositions.json'
+import inAllTypesNoCommonPositions from '@test/geojson/in/allTypesNoCommonPositions.json'
 import outAllTypesNoCommonPositionsRemoveAllPositions from '@test/geojson/out/allTypesNoCommonPositionsRemoveAllPositions.json'
-import inAllTypesNoCommonPositionsLeaveAllPositions from '@test/geojson/in/allTypesNoCommonPositionsLeaveAllPositions.json'
 import outAllTypesNoCommonPositionsLeaveAllPositions from '@test/geojson/out/allTypesNoCommonPositionsLeaveAllPositions.json'
 import inSmallLineStringNoCommonPositions from '@test/geojson/in/smallLineStringNoCommonPositions.json'
 import outSmallLineStringNoCommonPositions from '@test/geojson/out/smallLineStringNoCommonPositions.json'
@@ -38,6 +37,8 @@ import outSmallMultiPolygonNoCommonPositions from '@test/geojson/out/smallMultiP
 import inSmallFeatureCollectionNoCommonPositions from '@test/geojson/in/smallFeatureCollectionNoCommonPositions.json'
 import outSmallFeatureCollectionNoCommonPositions from '@test/geojson/out/smallFeatureCollectionNoCommonPositions.json'
 
+import inAllTypesWithCommonPositions from '@test/geojson/in/allTypesWithCommonPositions.json'
+import outAllTypesWithCommonPositionsRemoveAllPositions from '@test/geojson/out/allTypesWithCommonPositionsRemoveAllPositions.json'
 import inSmallMultiLineStringWithCommonPositions from '@test/geojson/in/smallMultiLineStringWithCommonPositions.json'
 import outSmallMultiLineStringWithCommonPositions from '@test/geojson/out/smallMultiLineStringWithCommonPositions.json'
 
@@ -220,7 +221,7 @@ describe('simplify() - provided options validation', () => {
 describe('simplify() - simplification by tolerance without common positions', () => {
   it('should remove all positions except points when provided tolerance is huge', () => {
     assert.deepStrictEqual(
-      simplify(inAllTypesNoCommonPositionsRemoveAllPositions as GeoJsonObject, {
+      simplify(inAllTypesNoCommonPositions as GeoJsonObject, {
         mutate: false,
         tolerance: 1e6,
       }),
@@ -230,7 +231,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
 
   it('should leave all positions when provided tolerance is tiny', () => {
     assert.deepStrictEqual(
-      simplify(inAllTypesNoCommonPositionsLeaveAllPositions as GeoJsonObject, {
+      simplify(inAllTypesNoCommonPositions as GeoJsonObject, {
         mutate: false,
         tolerance: 0.00000002422,
       }),
@@ -240,7 +241,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
 
   it('should leave all positions when tolerance is not provided', () => {
     assert.deepStrictEqual(
-      simplify(inAllTypesNoCommonPositionsLeaveAllPositions as GeoJsonObject, {
+      simplify(inAllTypesNoCommonPositions as GeoJsonObject, {
         mutate: false,
       }),
       outAllTypesNoCommonPositionsLeaveAllPositions,
@@ -312,6 +313,16 @@ describe('simplify() - simplification by tolerance without common positions', ()
 })
 
 describe('simplify() - simplification by tolerance with common positions', () => {
+  it('should remove all positions except common positions and points when provided tolerance is huge', () => {
+    assert.deepStrictEqual(
+      simplify(inAllTypesWithCommonPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 1e6,
+      }),
+      outAllTypesWithCommonPositionsRemoveAllPositions,
+    )
+  })
+
   it('should correctly simplify small MultiLineString', () => {
     assert.deepStrictEqual(
       simplify(inSmallMultiLineStringWithCommonPositions as GeoJsonObject, {

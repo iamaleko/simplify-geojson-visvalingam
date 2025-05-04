@@ -49,3 +49,26 @@ if (0) {
     ),
   )
 }
+
+import inSmallPolygonNoCommonPositions from '@test/geojson/in/smallPolygonNoCommonPositions.json'
+if (0) {
+  console.log(
+    JSON.stringify(
+      simplify(inSmallPolygonNoCommonPositions as GeoJsonObject, {
+        // tolerance: 0.000000031, // leave all
+        tolerance: 0.000000096, // remove part
+      }),
+    ),
+  )
+}
+
+import inSmallMultiPolygonNoCommonPositions from '@test/geojson/in/smallMultiPolygonNoCommonPositions.json'
+if (0) {
+  console.log(
+    JSON.stringify(
+      simplify(inSmallMultiPolygonNoCommonPositions as GeoJsonObject, {
+        tolerance: 0.000000037, // remove part
+      }),
+    ),
+  )
+}

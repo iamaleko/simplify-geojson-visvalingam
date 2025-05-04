@@ -31,6 +31,10 @@ import inSmallLineStringNoCommonPositions from '@test/geojson/in/smallLineString
 import outSmallLineStringNoCommonPositions from '@test/geojson/out/smallLineStringNoCommonPositions.json'
 import inSmallMultiLineStringNoCommonPositions from '@test/geojson/in/smallMultiLineStringNoCommonPositions.json'
 import outSmallMultiLineStringNoCommonPositions from '@test/geojson/out/smallMultiLineStringNoCommonPositions.json'
+import inSmallPolygonNoCommonPositions from '@test/geojson/in/smallPolygonNoCommonPositions.json'
+import outSmallPolygonNoCommonPositions from '@test/geojson/out/smallPolygonNoCommonPositions.json'
+import inSmallMultiPolygonNoCommonPositions from '@test/geojson/in/smallMultiPolygonNoCommonPositions.json'
+import outSmallMultiPolygonNoCommonPositions from '@test/geojson/out/smallMultiPolygonNoCommonPositions.json'
 
 describe('simplify() - provided GeoJSON validation', () => {
   it('should throw TypeError when provided GeoJSON is null', () => {
@@ -238,6 +242,19 @@ describe('simplify() - simplification by tolerance without common positions', ()
     )
   })
 
+  it('should return indempotent result when provided same options', () => {
+    const json = simplify(inSmallPolygonNoCommonPositions as GeoJsonObject, {
+      mutate: false,
+      tolerance: 0.000000096,
+    })
+    assert.deepStrictEqual(
+      simplify(json, {
+        tolerance: 0.000000096,
+      }),
+      outSmallPolygonNoCommonPositions,
+    )
+  })
+
   it('should correctly simplify small LineString', () => {
     assert.deepStrictEqual(
       simplify(inSmallLineStringNoCommonPositions as GeoJsonObject, {
@@ -255,6 +272,26 @@ describe('simplify() - simplification by tolerance without common positions', ()
         tolerance: 0.000000000005,
       }),
       outSmallMultiLineStringNoCommonPositions,
+    )
+  })
+
+  it('should correctly simplify small Polygon', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallPolygonNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 0.000000096,
+      }),
+      outSmallPolygonNoCommonPositions,
+    )
+  })
+
+  it('should correctly simplify small MultiPolygon', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallMultiPolygonNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 0.000000037,
+      }),
+      outSmallMultiPolygonNoCommonPositions,
     )
   })
 })

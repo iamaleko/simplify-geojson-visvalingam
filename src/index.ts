@@ -21,9 +21,12 @@ type Positions = {
   coordinates: Position[]
   nextIndexes: number[]
   prevIndexes: number[]
-  sortIndexes: number[]
-  groupedFrom: number[]
-  groupedTo: number[]
+}
+
+type Groups = {
+  sortIndexes: Uint32Array
+  groupedFrom: Uint32Array
+  groupedTo: Uint32Array
 }
 
 export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}): GeoJsonObject {
@@ -56,50 +59,49 @@ export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}):
     coordinates: [],
     nextIndexes: [],
     prevIndexes: [],
-    sortIndexes: [],
-    groupedFrom: [],
-    groupedTo: [],
   }
-
   collectPositions(geojson, positions)
+
   if (positions.coordinates.length) {
-    groupPositions(positions)
-    const isDeleted: Uint8Array = new Uint8Array(positions.coordinates.length)
-    deletePositions(positions, tolerance, isDeleted)
-    updatePositions(geojson, isDeleted, 0)
+    updatePositions(geojson, deletePositions(positions, groupPositions(positions.coordinates), tolerance), 0)
   }
 
   return geojson
 }
 
-function groupPositions(positions: Positions): void {
-  positions.sortIndexes = [...new Array(positions.coordinates.length).keys()]
-  positions.sortIndexes.sort((a, b) => {
-    return (
-      positions.coordinates[a][0] - positions.coordinates[b][0] ||
-      positions.coordinates[a][1] - positions.coordinates[b][1]
-    )
+function groupPositions(coordinates: Position[]): Groups {
+  const sortIndexes = new Uint32Array(coordinates.length)
+  const groupedFrom = new Uint32Array(coordinates.length)
+  const groupedTo = new Uint32Array(coordinates.length)
+  for (let i = 0; i < coordinates.length; i++) {
+    sortIndexes[i] = i
+  }
+  sortIndexes.sort((a, b) => {
+    return coordinates[a][0] - coordinates[b][0] || coordinates[a][1] - coordinates[b][1]
   })
-
-  positions.groupedFrom = new Array(positions.coordinates.length).fill(0)
-  positions.groupedTo = new Array(positions.coordinates.length).fill(positions.sortIndexes.length - 1)
-  for (let i = 1, j = positions.sortIndexes.length - 2; i < positions.sortIndexes.length; i++, j--) {
+  groupedTo[0] = groupedTo.length - 1
+  for (let i = 1, j = coordinates.length - 2; i < coordinates.length; i++, j--) {
     if (
-      positions.coordinates[positions.sortIndexes[i]][0] !== positions.coordinates[positions.sortIndexes[i - 1]][0] ||
-      positions.coordinates[positions.sortIndexes[i]][1] !== positions.coordinates[positions.sortIndexes[i - 1]][1]
+      coordinates[sortIndexes[i]][0] !== coordinates[sortIndexes[i - 1]][0] ||
+      coordinates[sortIndexes[i]][1] !== coordinates[sortIndexes[i - 1]][1]
     ) {
-      positions.groupedFrom[positions.sortIndexes[i]] = i
+      groupedFrom[sortIndexes[i]] = i
     } else {
-      positions.groupedFrom[positions.sortIndexes[i]] = positions.groupedFrom[positions.sortIndexes[i - 1]]
+      groupedFrom[sortIndexes[i]] = groupedFrom[sortIndexes[i - 1]]
     }
     if (
-      positions.coordinates[positions.sortIndexes[j]][0] !== positions.coordinates[positions.sortIndexes[j + 1]][0] ||
-      positions.coordinates[positions.sortIndexes[j]][1] !== positions.coordinates[positions.sortIndexes[j + 1]][1]
+      coordinates[sortIndexes[j]][0] !== coordinates[sortIndexes[j + 1]][0] ||
+      coordinates[sortIndexes[j]][1] !== coordinates[sortIndexes[j + 1]][1]
     ) {
-      positions.groupedTo[positions.sortIndexes[j]] = j
+      groupedTo[sortIndexes[j]] = j
     } else {
-      positions.groupedTo[positions.sortIndexes[j]] = positions.groupedTo[positions.sortIndexes[j + 1]]
+      groupedTo[sortIndexes[j]] = groupedTo[sortIndexes[j + 1]]
     }
+  }
+  return {
+    sortIndexes,
+    groupedFrom,
+    groupedTo,
   }
 }
 
@@ -191,15 +193,18 @@ function heapify(heap: Uint32Array, heapRev: Uint32Array, priority: Float64Array
   }
 }
 
-function deletePositions(positions: Positions, tolerance: FinitePositiveNumber, isDeleted: Uint8Array): void {
+function deletePositions(positions: Positions, groups: Groups, tolerance: FinitePositiveNumber): Uint8Array {
   const n = positions.coordinates.length
 
-  const candidatesByGroupFrom: Uint32Array = new Uint32Array(n)
-  const isCandidate: Uint8Array = new Uint8Array(n)
+  const isDeleted = new Uint8Array(n)
 
-  const heap: Uint32Array = new Uint32Array(n + 1)
-  const priority: Float64Array = new Float64Array(n)
-  const heapRev: Uint32Array = new Uint32Array(n)
+  const candidatesByGroupFrom = new Uint32Array(n)
+  const isCandidate = new Uint8Array(n)
+
+  const heap = new Uint32Array(n + 1)
+  const priority = new Float64Array(n)
+  const heapRev = new Uint32Array(n)
+
   for (let i = 0; i < n; i++) {
     if (positions.prevIndexes[i] !== -1 && positions.nextIndexes[i] !== -1) {
       priority[i] = getPositionArea(i, positions)
@@ -227,18 +232,18 @@ function deletePositions(positions: Positions, tolerance: FinitePositiveNumber, 
     // mark as candidate
     if (!isCandidate[i]) {
       isCandidate[i] = 1
-      candidatesByGroupFrom[positions.groupedFrom[i]]++
+      candidatesByGroupFrom[groups.groupedFrom[i]]++
     }
 
     // check if position is grouped and group is not entirely marked
-    if (candidatesByGroupFrom[positions.groupedFrom[i]] !== positions.groupedTo[i] - positions.groupedFrom[i] + 1) {
+    if (candidatesByGroupFrom[groups.groupedFrom[i]] !== groups.groupedTo[i] - groups.groupedFrom[i] + 1) {
       continue
     }
 
     // delete all positions from group
     // possible bug: in ring with two idetical positions (!!) test case needed
-    for (let k: number, j = positions.groupedFrom[i]; j <= positions.groupedTo[i]; j++) {
-      k = positions.sortIndexes[j]
+    for (let k: number, j = groups.groupedFrom[i]; j <= groups.groupedTo[i]; j++) {
+      k = groups.sortIndexes[j]
       if (isDeleted[k]) {
         continue
       }
@@ -252,19 +257,19 @@ function deletePositions(positions: Positions, tolerance: FinitePositiveNumber, 
         // mark neighbors as candidates if not yet
         if (!isCandidate[positions.prevIndexes[k]]) {
           isCandidate[positions.prevIndexes[k]] = 1
-          candidatesByGroupFrom[positions.groupedFrom[positions.prevIndexes[k]]]++
+          candidatesByGroupFrom[groups.groupedFrom[positions.prevIndexes[k]]]++
         }
         if (!isCandidate[positions.nextIndexes[k]]) {
           isCandidate[positions.nextIndexes[k]] = 1
-          candidatesByGroupFrom[positions.groupedFrom[positions.nextIndexes[k]]]++
+          candidatesByGroupFrom[groups.groupedFrom[positions.nextIndexes[k]]]++
         }
 
         // remove entire ring if neighbor groups are entirely marked
         if (
-          candidatesByGroupFrom[positions.groupedFrom[positions.prevIndexes[k]]] ===
-            positions.groupedTo[positions.prevIndexes[k]] - positions.groupedFrom[positions.prevIndexes[k]] + 1 &&
-          candidatesByGroupFrom[positions.groupedFrom[positions.nextIndexes[k]]] ===
-            positions.groupedTo[positions.nextIndexes[k]] - positions.groupedFrom[positions.nextIndexes[k]] + 1
+          candidatesByGroupFrom[groups.groupedFrom[positions.prevIndexes[k]]] ===
+            groups.groupedTo[positions.prevIndexes[k]] - groups.groupedFrom[positions.prevIndexes[k]] + 1 &&
+          candidatesByGroupFrom[groups.groupedFrom[positions.nextIndexes[k]]] ===
+            groups.groupedTo[positions.nextIndexes[k]] - groups.groupedFrom[positions.nextIndexes[k]] + 1
         ) {
           isDeleted[k] = 1
           isDeleted[positions.nextIndexes[k]] = 1
@@ -272,7 +277,7 @@ function deletePositions(positions: Positions, tolerance: FinitePositiveNumber, 
 
           // repeat to delete all matching rings
           // possible optimization
-          j = positions.groupedFrom[i] - 1
+          j = groups.groupedFrom[i] - 1
         }
       } else {
         isDeleted[k] = 1
@@ -291,6 +296,7 @@ function deletePositions(positions: Positions, tolerance: FinitePositiveNumber, 
       }
     }
   }
+  return isDeleted
 }
 
 function updatePositions(geojson: GeoJsonObject, isDeleted: Uint8Array, index: number): number {

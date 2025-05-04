@@ -19,15 +19,15 @@ print(json.dumps({
   "type": "MultiPolygon",
   "coordinates": [
     [
-      generate_ring(*center, 50, 10),
+      generate_ring(*center, 60, 16),
       list(reversed(generate_ring(*center, 40, 9)))
     ],
     [
       generate_ring(*center, 40, 9),
-      list(reversed(generate_ring(*center, 30, 8)))
+      list(reversed(generate_ring(*center, 20, 8)))
     ],
     [
-      generate_ring(*center, 30, 8)
+      generate_ring(*center, 20, 8)
     ],
   ],
 }))

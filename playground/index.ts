@@ -98,3 +98,14 @@ if (0) {
     ),
   )
 }
+
+import inSmallMultiPolygonWithCommonPositions from '@test/geojson/in/smallMultiPolygonWithCommonPositions.json'
+if (0) {
+  console.log(
+    JSON.stringify(
+      simplify(inSmallMultiPolygonWithCommonPositions as GeoJsonObject, {
+        tolerance: 0.000000014, // remove part
+      }),
+    ),
+  )
+}

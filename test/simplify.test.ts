@@ -38,6 +38,9 @@ import outSmallMultiPolygonNoCommonPositions from '@test/geojson/out/smallMultiP
 import inSmallFeatureCollectionNoCommonPositions from '@test/geojson/in/smallFeatureCollectionNoCommonPositions.json'
 import outSmallFeatureCollectionNoCommonPositions from '@test/geojson/out/smallFeatureCollectionNoCommonPositions.json'
 
+import inSmallMultiLineStringWithCommonPositions from '@test/geojson/in/smallMultiLineStringWithCommonPositions.json'
+import outSmallMultiLineStringWithCommonPositions from '@test/geojson/out/smallMultiLineStringWithCommonPositions.json'
+
 describe('simplify() - provided GeoJSON validation', () => {
   it('should throw TypeError when provided GeoJSON is null', () => {
     assert.throws(
@@ -304,6 +307,18 @@ describe('simplify() - simplification by tolerance without common positions', ()
         tolerance: 0.000000037,
       }),
       outSmallFeatureCollectionNoCommonPositions,
+    )
+  })
+})
+
+describe('simplify() - simplification by tolerance with common positions', () => {
+  it('should correctly simplify small MultiLineString', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallMultiLineStringWithCommonPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 0.000000000005,
+      }),
+      outSmallMultiLineStringWithCommonPositions,
     )
   })
 })

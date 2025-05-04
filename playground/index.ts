@@ -74,11 +74,24 @@ if (0) {
 }
 
 import inSmallFeatureCollectionNoCommonPositions from '@test/geojson/in/smallFeatureCollectionNoCommonPositions.json'
-if (1) {
+if (0) {
   console.log(
     JSON.stringify(
       simplify(inSmallFeatureCollectionNoCommonPositions as GeoJsonObject, {
         tolerance: 0.000000037, // remove part
+      }),
+    ),
+  )
+}
+
+import inSmallMultiLineStringWithCommonPositions from '@test/geojson/in/smallMultiLineStringWithCommonPositions.json'
+if (0) {
+  console.log(
+    JSON.stringify(
+      simplify(inSmallMultiLineStringWithCommonPositions as GeoJsonObject, {
+        // tolerance: 0.000000000004, // leave all
+        tolerance: 0.000000000005, // remove part
+        // tolerance: 0.000000000542, // remove all except starting points and common positions
       }),
     ),
   )

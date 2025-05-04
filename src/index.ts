@@ -116,6 +116,10 @@ function getPositionArea(i: number, positions: Positions): number {
   )
 }
 
+function heapcompare(a: number, b: number, priority: Float64Array, coordinates: Position[]): number {
+  return priority[a] - priority[b] || coordinates[a][0] - coordinates[b][0] || coordinates[a][1] - coordinates[b][1]
+}
+
 function heapsink(
   heap: Uint32Array,
   heapRev: Uint32Array,
@@ -125,29 +129,9 @@ function heapsink(
 ): number {
   let l: number, r: number, t: number
   while (true) {
-    l = i << 1
-    r = l + 1
     t = i
-    if (
-      l <= heap[0] &&
-      (priority[heap[t]] > priority[heap[l]] ||
-        (priority[heap[t]] === priority[heap[l]] &&
-          (coordinates[heap[t]][0] > coordinates[heap[l]][0] ||
-            (coordinates[heap[t]][0] === coordinates[heap[l]][0] &&
-              coordinates[heap[t]][1] > coordinates[heap[l]][1]))))
-    ) {
-      t = l
-    }
-    if (
-      r <= heap[0] &&
-      (priority[heap[t]] > priority[heap[r]] ||
-        (priority[heap[t]] === priority[heap[r]] &&
-          (coordinates[heap[t]][0] > coordinates[heap[r]][0] ||
-            (coordinates[heap[t]][0] === coordinates[heap[r]][0] &&
-              coordinates[heap[t]][1] > coordinates[heap[r]][1]))))
-    ) {
-      t = r
-    }
+    if ((l = i << 1) <= heap[0] && heapcompare(heap[t], heap[l], priority, coordinates) > 0) t = l
+    if ((r = l + 1) <= heap[0] && heapcompare(heap[t], heap[r], priority, coordinates) > 0) t = r
     if (i === t) break
     heapswap(heap, heapRev, i, t)
     i = t
@@ -165,15 +149,7 @@ function heapbubble(
   let t: number
   while (i > 1) {
     t = i >>> 1
-    if (
-      i === t ||
-      priority[heap[t]] < priority[heap[i]] ||
-      (priority[heap[t]] === priority[heap[i]] &&
-        (coordinates[heap[t]][0] < coordinates[heap[i]][0] ||
-          (coordinates[heap[t]][0] === coordinates[heap[i]][0] && coordinates[heap[t]][1] < coordinates[heap[i]][1])))
-    ) {
-      break
-    }
+    if (i === t || heapcompare(heap[t], heap[i], priority, coordinates) <= 0) break
     heapswap(heap, heapRev, i, t)
     i = t
   }

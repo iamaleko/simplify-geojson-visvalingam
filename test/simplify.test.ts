@@ -35,6 +35,8 @@ import inSmallPolygonNoCommonPositions from '@test/geojson/in/smallPolygonNoComm
 import outSmallPolygonNoCommonPositions from '@test/geojson/out/smallPolygonNoCommonPositions.json'
 import inSmallMultiPolygonNoCommonPositions from '@test/geojson/in/smallMultiPolygonNoCommonPositions.json'
 import outSmallMultiPolygonNoCommonPositions from '@test/geojson/out/smallMultiPolygonNoCommonPositions.json'
+import inSmallFeatureCollectionNoCommonPositions from '@test/geojson/in/smallFeatureCollectionNoCommonPositions.json'
+import outSmallFeatureCollectionNoCommonPositions from '@test/geojson/out/smallFeatureCollectionNoCommonPositions.json'
 
 describe('simplify() - provided GeoJSON validation', () => {
   it('should throw TypeError when provided GeoJSON is null', () => {
@@ -292,6 +294,16 @@ describe('simplify() - simplification by tolerance without common positions', ()
         tolerance: 0.000000037,
       }),
       outSmallMultiPolygonNoCommonPositions,
+    )
+  })
+
+  it('should correctly simplify small FeatureCollection', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallFeatureCollectionNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        tolerance: 0.000000037,
+      }),
+      outSmallFeatureCollectionNoCommonPositions,
     )
   })
 })

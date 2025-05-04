@@ -72,3 +72,14 @@ if (0) {
     ),
   )
 }
+
+import inSmallFeatureCollectionNoCommonPositions from '@test/geojson/in/smallFeatureCollectionNoCommonPositions.json'
+if (1) {
+  console.log(
+    JSON.stringify(
+      simplify(inSmallFeatureCollectionNoCommonPositions as GeoJsonObject, {
+        tolerance: 0.000000037, // remove part
+      }),
+    ),
+  )
+}

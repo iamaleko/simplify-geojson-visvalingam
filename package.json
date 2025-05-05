@@ -1,6 +1,6 @@
 {
   "name": "simplify-geojson-visvalingam",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "GeoJSON simplification library using the Visvalingam algorithm for efficient point reduction and geometry preservation.",
   "author": "Alexander Kolobov",
   "license": "MIT",
@@ -21,13 +21,17 @@
   },
   "homepage": "https://github.com/iamaleko/simplify-geojson-visvalingam#readme",
   "type": "module",
-  "main": "dist/index.js",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+    "import": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "require": "./dist/index.cjs"
     }
   },
   "files": [

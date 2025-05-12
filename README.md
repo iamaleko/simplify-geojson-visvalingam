@@ -17,8 +17,18 @@ npm i --save simplify-geojson-visvalingam
 *   `geojson` **[GeoJSON][1]** object to be simplified, should extends [GeoJsonObject][6] in TypeScript
 *   `options` **[Object][3]** Optional parameters (optional, default `{}`), should be of type [SimplifyOptions][7] in TypeScript
 
-    *   `options.tolerance` **[number][4]** simplification tolerance, the minimum Cartesian area of ​​a triangle formed by a point and its two neighbors to preserve that point (optional, default `undefined`, **disables simplification if not provided**)
+    *   `options.tolerance` **[number][4]** simplification tolerance, the minimum Cartesian area of ​​a triangle formed by a point and its two neighbors to preserve that point (optional, default `0`)
+    *   `options.fraction` **[number][4]** the fraction of all points to be removed (optional, default `0`)
     *   `options.mutate` **[boolean][5]** allows GeoJSON input to be mutated (optional, default `true`)
+
+> `tolerance` and `fraction` can be used together to make the simplification satisfy both options, but if neither is provided, the `geojson` will remain unsimplified
+
+## Features and limitations
+
+* Provides stable simplification and a better level of visual detail than the [Ramer–Douglas–Peucker][8] algorithm
+* Will remove common points of different geometries simultaneously to preserve common boundaries
+* Will leave valid empty `Feature` objects even if all their geometry will be removed, the GeoJSON structure will remain intact
+* The start and end point of the `LineString` objects will never be removed
 
 ## Usage
 ### JS
@@ -56,7 +66,7 @@ const geojson = {
   ]
 }
 const options = {
-  tolerance: 0.00008,
+  tolerance: 0.00008, // remove all points that form a triangle with a smaller Cartesian area
 }
 const result = simplify(geojson, options)
 ```
@@ -93,7 +103,7 @@ const geojson: Polygon = {
   ]
 }
 const options: SimplifyOptions  = {
-  tolerance: 0.00008,
+  fraction: 0.5, // remove 50% of all points
 }
 const result = simplify(geojson, options)
 ```
@@ -111,3 +121,5 @@ const result = simplify(geojson, options)
 [6]: https://www.npmjs.com/package/@types/geojson
 
 [7]: https://github.com/iamaleko/simplify-geojson-visvalingam/blob/56aece32122cb38f2d1cfc2e23a2b366d1e8ae5b/src/index.ts#L15
+
+[8]: https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm

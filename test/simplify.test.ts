@@ -24,25 +24,38 @@ import inMinimalMultiPolygon from '@test/geojson/in/minimalMultiPolygon.json'
 import inMinimalGeometryCollection from '@test/geojson/in/minimalGeometryCollection.json'
 
 import inAllTypesNoCommonPositions from '@test/geojson/in/allTypesNoCommonPositions.json'
-import outAllTypesNoCommonPositionsRemoveAllPositions from '@test/geojson/out/allTypesNoCommonPositionsRemoveAllPositions.json'
-import outAllTypesNoCommonPositionsLeaveAllPositions from '@test/geojson/out/allTypesNoCommonPositionsLeaveAllPositions.json'
+import outAllTypesNoCommonPositionsFraction1Tolerance1e6 from '@test/geojson/out/allTypesNoCommonPositionsFraction1Tolerance1e6.json'
+import outAllTypesNoCommonPositionsLeaveAllPositionsFraction001Tolerance00000002422 from '@test/geojson/out/allTypesNoCommonPositionsFraction001Tolerance00000002422.json'
+
 import inSmallLineStringNoCommonPositions from '@test/geojson/in/smallLineStringNoCommonPositions.json'
-import outSmallLineStringNoCommonPositions from '@test/geojson/out/smallLineStringNoCommonPositions.json'
+import outSmallLineStringNoCommonPositionsFraction0Tolerance000000000005 from '@test/geojson/out/smallLineStringNoCommonPositionsFraction0Tolerance000000000005.json'
+import outSmallLineStringNoCommonPositionsFraction05Tolerance0 from '@test/geojson/out/smallLineStringNoCommonPositionsFraction05Tolerance0.json'
+
 import inSmallMultiLineStringNoCommonPositions from '@test/geojson/in/smallMultiLineStringNoCommonPositions.json'
-import outSmallMultiLineStringNoCommonPositions from '@test/geojson/out/smallMultiLineStringNoCommonPositions.json'
+import outSmallMultiLineStringNoCommonPositionsFraction0Tolerance000000000005 from '@test/geojson/out/smallMultiLineStringNoCommonPositionsFraction0Tolerance000000000005.json'
+import outSmallMultiLineStringNoCommonPositionsFraction02Tolerance0 from '@test/geojson/out/smallMultiLineStringNoCommonPositionsFraction02Tolerance0.json'
+
 import inSmallPolygonNoCommonPositions from '@test/geojson/in/smallPolygonNoCommonPositions.json'
-import outSmallPolygonNoCommonPositions from '@test/geojson/out/smallPolygonNoCommonPositions.json'
+import outSmallPolygonNoCommonPositionsFraction0Tolerance000000096 from '@test/geojson/out/smallPolygonNoCommonPositionsFraction0Tolerance000000096.json'
+import outSmallPolygonNoCommonPositionsFraction075Tolerance0 from '@test/geojson/out/smallPolygonNoCommonPositionsFraction075Tolerance0.json'
+
 import inSmallMultiPolygonNoCommonPositions from '@test/geojson/in/smallMultiPolygonNoCommonPositions.json'
-import outSmallMultiPolygonNoCommonPositions from '@test/geojson/out/smallMultiPolygonNoCommonPositions.json'
+import outSmallMultiPolygonNoCommonPositionsFraction0Tolerance000000037 from '@test/geojson/out/smallMultiPolygonNoCommonPositionsFraction0Tolerance000000037.json'
+import outSmallMultiPolygonNoCommonPositionsFraction045Tolerance0 from '@test/geojson/out/smallMultiPolygonNoCommonPositionsFraction045Tolerance0.json'
+
 import inSmallFeatureCollectionNoCommonPositions from '@test/geojson/in/smallFeatureCollectionNoCommonPositions.json'
-import outSmallFeatureCollectionNoCommonPositions from '@test/geojson/out/smallFeatureCollectionNoCommonPositions.json'
+import outSmallFeatureCollectionNoCommonPositionsFraction035Tolerance000000037 from '@test/geojson/out/smallFeatureCollectionNoCommonPositionsFraction035Tolerance000000037.json'
 
 import inAllTypesWithCommonPositions from '@test/geojson/in/allTypesWithCommonPositions.json'
-import outAllTypesWithCommonPositionsRemoveAllPositions from '@test/geojson/out/allTypesWithCommonPositionsRemoveAllPositions.json'
+import outAllTypesWithCommonPositionsFraction1Tolerance1e6 from '@test/geojson/out/allTypesWithCommonPositionsFraction1Tolerance1e6.json'
+
 import inSmallMultiLineStringWithCommonPositions from '@test/geojson/in/smallMultiLineStringWithCommonPositions.json'
-import outSmallMultiLineStringWithCommonPositions from '@test/geojson/out/smallMultiLineStringWithCommonPositions.json'
+import outSmallMultiLineStringWithCommonPositionsFraction0Tolerance000000000005 from '@test/geojson/out/smallMultiLineStringWithCommonPositionsFraction0Tolerance000000000005.json'
+import outSmallMultiLineStringWithCommonPositionsFraction03Tolerance0 from '@test/geojson/out/smallMultiLineStringWithCommonPositionsFraction03Tolerance0.json'
+
 import inSmallMultiPolygonWithCommonPositions from '@test/geojson/in/smallMultiPolygonWithCommonPositions.json'
-import outSmallMultiPolygonWithCommonPositions from '@test/geojson/out/smallMultiPolygonWithCommonPositions.json'
+import outSmallMultiPolygonWithCommonPositionsFraction0Tolerance000000014 from '@test/geojson/out/smallMultiPolygonWithCommonPositionsFraction0Tolerance000000014.json'
+import outSmallMultiPolygonWithCommonPositionsFraction03Tolerance0 from '@test/geojson/out/smallMultiPolygonWithCommonPositionsFraction03Tolerance0.json'
 
 describe('simplify() - provided GeoJSON validation', () => {
   it('should throw TypeError when provided GeoJSON is null', () => {
@@ -194,7 +207,62 @@ describe('simplify() - provided options validation', () => {
     )
   })
 
-  it('should not throw when tolerance is not provided', () => {
+  it('should throw Error when provided fraction is not a number', () => {
+    assert.throws(
+      () =>
+        simplify(inMinimalFeature as Feature, {
+          mutate: false,
+          fraction: true as unknown as number,
+        }),
+      new Error(`Expected provided fraction to be a finite positive number, but received true.`),
+    )
+  })
+
+  it('should throw Error when provided fraction is less than 0', () => {
+    assert.throws(
+      () =>
+        simplify(inMinimalFeature as Feature, {
+          mutate: false,
+          fraction: -1,
+        }),
+      new Error(`Expected provided fraction to be a finite positive number, but received -1.`),
+    )
+  })
+
+  it('should throw Error when provided fraction is greater than 1', () => {
+    assert.throws(
+      () =>
+        simplify(inMinimalFeature as Feature, {
+          mutate: false,
+          fraction: 1.1,
+        }),
+      new Error(`Expected provided fraction to be less or equal to 1, but received 1.1.`),
+    )
+  })
+
+  it('should throw Error when provided fraction is equal to 0', () => {
+    assert.throws(
+      () =>
+        simplify(inMinimalFeature as Feature, {
+          mutate: false,
+          fraction: 0,
+        }),
+      new Error(`Expected provided fraction to be a finite positive number, but received 0.`),
+    )
+  })
+
+  it('should throw Error when provided fraction is infinite', () => {
+    assert.throws(
+      () =>
+        simplify(inMinimalFeature as Feature, {
+          mutate: false,
+          fraction: Infinity,
+        }),
+      new Error(`Expected provided fraction to be a finite positive number, but received Infinity.`),
+    )
+  })
+
+  it('should not throw when tolerance and/or fraction is not provided', () => {
     assert.doesNotThrow(() =>
       simplify(inMinimalFeature as Feature, {
         mutate: false,
@@ -227,7 +295,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
         mutate: false,
         tolerance: 1e6,
       }),
-      outAllTypesNoCommonPositionsRemoveAllPositions,
+      outAllTypesNoCommonPositionsFraction1Tolerance1e6,
     )
   })
 
@@ -237,20 +305,20 @@ describe('simplify() - simplification by tolerance without common positions', ()
         mutate: false,
         tolerance: 0.00000002422,
       }),
-      outAllTypesNoCommonPositionsLeaveAllPositions,
+      outAllTypesNoCommonPositionsLeaveAllPositionsFraction001Tolerance00000002422,
     )
   })
 
-  it('should leave all positions when tolerance is not provided', () => {
+  it('should leave all positions when tolerance and fraction are not provided', () => {
     assert.deepStrictEqual(
       simplify(inAllTypesNoCommonPositions as GeoJsonObject, {
         mutate: false,
       }),
-      outAllTypesNoCommonPositionsLeaveAllPositions,
+      outAllTypesNoCommonPositionsLeaveAllPositionsFraction001Tolerance00000002422,
     )
   })
 
-  it('should return indempotent result when provided same options', () => {
+  it('should return indempotent result when provided same options twice', () => {
     const json = simplify(inSmallPolygonNoCommonPositions as GeoJsonObject, {
       mutate: false,
       tolerance: 0.000000096,
@@ -259,7 +327,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
       simplify(json, {
         tolerance: 0.000000096,
       }),
-      outSmallPolygonNoCommonPositions,
+      outSmallPolygonNoCommonPositionsFraction0Tolerance000000096,
     )
   })
 
@@ -269,7 +337,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
         mutate: false,
         tolerance: 0.000000000005,
       }),
-      outSmallLineStringNoCommonPositions,
+      outSmallLineStringNoCommonPositionsFraction0Tolerance000000000005,
     )
   })
 
@@ -279,7 +347,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
         mutate: false,
         tolerance: 0.000000000005,
       }),
-      outSmallMultiLineStringNoCommonPositions,
+      outSmallMultiLineStringNoCommonPositionsFraction0Tolerance000000000005,
     )
   })
 
@@ -289,7 +357,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
         mutate: false,
         tolerance: 0.000000096,
       }),
-      outSmallPolygonNoCommonPositions,
+      outSmallPolygonNoCommonPositionsFraction0Tolerance000000096,
     )
   })
 
@@ -299,7 +367,7 @@ describe('simplify() - simplification by tolerance without common positions', ()
         mutate: false,
         tolerance: 0.000000037,
       }),
-      outSmallMultiPolygonNoCommonPositions,
+      outSmallMultiPolygonNoCommonPositionsFraction0Tolerance000000037,
     )
   })
 
@@ -309,7 +377,93 @@ describe('simplify() - simplification by tolerance without common positions', ()
         mutate: false,
         tolerance: 0.000000037,
       }),
-      outSmallFeatureCollectionNoCommonPositions,
+      outSmallFeatureCollectionNoCommonPositionsFraction035Tolerance000000037,
+    )
+  })
+})
+
+describe('simplify() - simplification by fraction without common positions', () => {
+  it('should remove all positions except points when provided fraction is 1', () => {
+    assert.deepStrictEqual(
+      simplify(inAllTypesNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 1,
+      }),
+      outAllTypesNoCommonPositionsFraction1Tolerance1e6,
+    )
+  })
+
+  it('should leave all positions when provided fraction is tiny', () => {
+    assert.deepStrictEqual(
+      simplify(inAllTypesNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.001,
+      }),
+      outAllTypesNoCommonPositionsLeaveAllPositionsFraction001Tolerance00000002422,
+    )
+  })
+
+  it('should not return indempotent result when provided same options twice', () => {
+    const json = simplify(inSmallPolygonNoCommonPositions as GeoJsonObject, {
+      mutate: false,
+      fraction: 0.5,
+    })
+    assert.deepStrictEqual(
+      simplify(json, {
+        fraction: 0.5,
+      }),
+      outSmallPolygonNoCommonPositionsFraction075Tolerance0,
+    )
+  })
+
+  it('should correctly simplify small LineString', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallLineStringNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.5,
+      }),
+      outSmallLineStringNoCommonPositionsFraction05Tolerance0,
+    )
+  })
+
+  it('should correctly simplify small MultiLineString', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallMultiLineStringNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.2,
+      }),
+      outSmallMultiLineStringNoCommonPositionsFraction02Tolerance0,
+    )
+  })
+
+  it('should correctly simplify small Polygon', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallPolygonNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.75,
+      }),
+      outSmallPolygonNoCommonPositionsFraction075Tolerance0,
+    )
+  })
+
+  it('should correctly simplify small MultiPolygon', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallMultiPolygonNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.45,
+      }),
+      outSmallMultiPolygonNoCommonPositionsFraction045Tolerance0,
+    )
+  })
+
+  it('should correctly simplify small FeatureCollection', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallFeatureCollectionNoCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.35,
+        tolerance: 0.000000037,
+      }),
+      outSmallFeatureCollectionNoCommonPositionsFraction035Tolerance000000037,
     )
   })
 })
@@ -321,7 +475,7 @@ describe('simplify() - simplification by tolerance with common positions', () =>
         mutate: false,
         tolerance: 1e6,
       }),
-      outAllTypesWithCommonPositionsRemoveAllPositions,
+      outAllTypesWithCommonPositionsFraction1Tolerance1e6,
     )
   })
 
@@ -331,7 +485,7 @@ describe('simplify() - simplification by tolerance with common positions', () =>
         mutate: false,
         tolerance: 0.000000000005,
       }),
-      outSmallMultiLineStringWithCommonPositions,
+      outSmallMultiLineStringWithCommonPositionsFraction0Tolerance000000000005,
     )
   })
 
@@ -341,7 +495,39 @@ describe('simplify() - simplification by tolerance with common positions', () =>
         mutate: false,
         tolerance: 0.000000014,
       }),
-      outSmallMultiPolygonWithCommonPositions,
+      outSmallMultiPolygonWithCommonPositionsFraction0Tolerance000000014,
+    )
+  })
+})
+
+describe('simplify() - simplification by fraction with common positions', () => {
+  it('should remove all positions except common positions and points when provided fraction is 1', () => {
+    assert.deepStrictEqual(
+      simplify(inAllTypesWithCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 1,
+      }),
+      outAllTypesWithCommonPositionsFraction1Tolerance1e6,
+    )
+  })
+
+  it('should correctly simplify small MultiLineString', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallMultiLineStringWithCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.3,
+      }),
+      outSmallMultiLineStringWithCommonPositionsFraction03Tolerance0,
+    )
+  })
+
+  it('should correctly simplify small MultiPolygon', () => {
+    assert.deepStrictEqual(
+      simplify(inSmallMultiPolygonWithCommonPositions as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.3,
+      }),
+      outSmallMultiPolygonWithCommonPositionsFraction03Tolerance0,
     )
   })
 })

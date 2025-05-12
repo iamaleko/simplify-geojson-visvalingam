@@ -1,7 +1,6 @@
 import { GeoJsonObject, Position } from 'geojson'
 import {
   isObject,
-  FinitePositiveNumber,
   isFinitePositiveNumber,
   isFeature,
   isFeatureCollection,
@@ -14,6 +13,7 @@ import {
 
 export type SimplifyOptions = {
   tolerance?: number
+  fraction?: number
   mutate?: boolean
 }
 
@@ -38,17 +38,31 @@ export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}):
   }
 
   // validate options
-  let tolerance: FinitePositiveNumber
-  if (options.tolerance !== undefined && !isFinitePositiveNumber(options.tolerance)) {
-    throw new Error(`Expected provided tolerance to be a finite positive number, but received ${options.tolerance}.`)
-  } else {
-    // exit if no simplification options provided
-    if (options.tolerance === undefined) return geojson
+  let tolerance = 0
+  if (options.tolerance !== undefined) {
+    if (!isFinitePositiveNumber(options.tolerance)) {
+      throw new Error(`Expected provided tolerance to be a finite positive number, but received ${options.tolerance}.`)
+    }
     tolerance = options.tolerance
+  }
+  let fraction = 0
+  if (options.fraction !== undefined) {
+    if (!isFinitePositiveNumber(options.fraction)) {
+      throw new Error(`Expected provided fraction to be a finite positive number, but received ${options.fraction}.`)
+    }
+    if (options.fraction > 1) {
+      throw new Error(`Expected provided fraction to be less or equal to 1, but received ${options.fraction}.`)
+    }
+    fraction = options.fraction
   }
   let mutate = true
   if (options.mutate !== undefined) {
     mutate = !!options.mutate
+  }
+
+  // exit if no simplification options provided
+  if (tolerance === 0 && fraction === 0) {
+    return geojson
   }
 
   if (!mutate) {
@@ -63,7 +77,7 @@ export default function (geojson: GeoJsonObject, options: SimplifyOptions = {}):
   collectPositions(geojson, positions)
 
   if (positions.coordinates.length) {
-    updatePositions(geojson, deletePositions(positions, groupPositions(positions.coordinates), tolerance), 0)
+    updatePositions(geojson, deletePositions(positions, groupPositions(positions.coordinates), tolerance, fraction), 0)
   }
 
   return geojson
@@ -193,10 +207,11 @@ function heapify(heap: Uint32Array, heapRev: Uint32Array, priority: Float64Array
   }
 }
 
-function deletePositions(positions: Positions, groups: Groups, tolerance: FinitePositiveNumber): Uint8Array {
+function deletePositions(positions: Positions, groups: Groups, tolerance: number, fraction: number): Uint8Array {
   const n = positions.coordinates.length
 
   const isDeleted = new Uint8Array(n)
+  let toDelete = Math.round(n * fraction)
 
   const candidatesByGroupFrom = new Uint32Array(n)
   const isCandidate = new Uint8Array(n)
@@ -225,7 +240,7 @@ function deletePositions(positions: Positions, groups: Groups, tolerance: Finite
     }
 
     // check if simplification is completed
-    if (priority[i] >= tolerance) {
+    if (priority[i] >= tolerance && toDelete <= 0) {
       break
     }
 
@@ -272,6 +287,7 @@ function deletePositions(positions: Positions, groups: Groups, tolerance: Finite
             groups.groupedTo[positions.nextIndexes[k]] - groups.groupedFrom[positions.nextIndexes[k]] + 1
         ) {
           isDeleted[k] = 1
+          toDelete--
           isDeleted[positions.nextIndexes[k]] = 1
           isDeleted[positions.prevIndexes[k]] = 1
 
@@ -281,6 +297,7 @@ function deletePositions(positions: Positions, groups: Groups, tolerance: Finite
         }
       } else {
         isDeleted[k] = 1
+        toDelete--
         positions.prevIndexes[positions.nextIndexes[k]] = positions.prevIndexes[k]
         positions.nextIndexes[positions.prevIndexes[k]] = positions.nextIndexes[k]
 

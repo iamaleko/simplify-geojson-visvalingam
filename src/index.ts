@@ -287,9 +287,9 @@ function deletePositions(positions: Positions, groups: Groups, tolerance: number
             groups.groupedTo[positions.nextIndexes[k]] - groups.groupedFrom[positions.nextIndexes[k]] + 1
         ) {
           isDeleted[k] = 1
-          toDelete--
           isDeleted[positions.nextIndexes[k]] = 1
           isDeleted[positions.prevIndexes[k]] = 1
+          toDelete -= 3
 
           // repeat to delete all matching rings
           // possible optimization

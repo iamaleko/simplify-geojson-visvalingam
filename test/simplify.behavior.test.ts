@@ -14,32 +14,20 @@ import inGeometryCollectionSmallLineStringAndMinimalPoint from '@test/geojson/in
 import outGeometryCollectionSmallLineStringAndMinimalPointFraction0Tolerance000000000005 from '@test/geojson/out/geometryCollectionSmallLineStringAndMinimalPointFraction0Tolerance000000000005.json'
 import inPolygonWithSmallInteriorRing from '@test/geojson/in/polygonWithSmallInteriorRing.json'
 import outPolygonWithSmallInteriorRingFraction0Tolerance1 from '@test/geojson/out/polygonWithSmallInteriorRingFraction0Tolerance1.json'
+import outPolygonWithSmallInteriorRingFraction0125Tolerance0 from '@test/geojson/out/polygonWithSmallInteriorRingFraction0125Tolerance0.json'
+import inPolygonWithTriangularInteriorRing from '@test/geojson/in/polygonWithTriangularInteriorRing.json'
+import outPolygonWithTriangularInteriorRingFraction04Tolerance0 from '@test/geojson/out/polygonWithTriangularInteriorRingFraction04Tolerance0.json'
 import inMultiPolygonWithSmallPolygon from '@test/geojson/in/multiPolygonWithSmallPolygon.json'
 import outMultiPolygonWithSmallPolygonFraction0Tolerance1 from '@test/geojson/out/multiPolygonWithSmallPolygonFraction0Tolerance1.json'
-
-function countPositions(geojson: GeoJsonObject): number {
-  switch (geojson.type) {
-    case 'Feature':
-      return geojson.geometry ? countPositions(geojson.geometry) : 0
-    case 'FeatureCollection':
-      return geojson.features.reduce((sum, feature) => sum + countPositions(feature), 0)
-    case 'GeometryCollection':
-      return geojson.geometries.reduce((sum, geometry) => sum + countPositions(geometry), 0)
-    case 'Point':
-      return 1
-    case 'MultiPoint':
-    case 'LineString':
-      return geojson.coordinates.length
-    case 'MultiLineString':
-    case 'Polygon':
-      return geojson.coordinates.reduce((sum, coordinates) => sum + coordinates.length, 0)
-    case 'MultiPolygon':
-      return geojson.coordinates.reduce(
-        (sum, polygon) => sum + polygon.reduce((polygonSum, coordinates) => polygonSum + coordinates.length, 0),
-        0,
-      )
-  }
-}
+import inMultiPolygonWithSharedBoundarySegment from '@test/geojson/in/multiPolygonWithSharedBoundarySegment.json'
+import outMultiPolygonWithSharedBoundarySegmentFraction0Tolerance1 from '@test/geojson/out/multiPolygonWithSharedBoundarySegmentFraction0Tolerance1.json'
+import outMultiPolygonWithSharedBoundarySegmentFraction06Tolerance0 from '@test/geojson/out/multiPolygonWithSharedBoundarySegmentFraction06Tolerance0.json'
+import inMultiPolygonWithSharedBoundaryRibbon from '@test/geojson/in/multiPolygonWithSharedBoundaryRibbon.json'
+import outMultiPolygonWithSharedBoundaryRibbonFraction07Tolerance0 from '@test/geojson/out/multiPolygonWithSharedBoundaryRibbonFraction07Tolerance0.json'
+import outMultiPolygonWithSharedBoundaryRibbonFraction08Tolerance0 from '@test/geojson/out/multiPolygonWithSharedBoundaryRibbonFraction08Tolerance0.json'
+import outSmallPolygonNoCommonPositionsFraction0Tolerance000000096 from '@test/geojson/out/smallPolygonNoCommonPositionsFraction0Tolerance000000096.json'
+import outSmallPolygonNoCommonPositionsFraction05Tolerance0 from '@test/geojson/out/smallPolygonNoCommonPositionsFraction05Tolerance0.json'
+import outSmallPolygonNoCommonPositionsFraction05Tolerance000000096 from '@test/geojson/out/smallPolygonNoCommonPositionsFraction05Tolerance000000096.json'
 
 describe('simplify() - mutation semantics', () => {
   it('should not mutate input and should return a new object when mutate is false', () => {
@@ -152,6 +140,28 @@ describe('simplify() - polygon edge cases', () => {
     assert.deepStrictEqual(result, outPolygonWithSmallInteriorRingFraction0Tolerance1)
   })
 
+  it('should not remove an interior ring entirely when fraction budget is smaller than the whole ring', () => {
+    const input = structuredClone(inPolygonWithSmallInteriorRing) as Polygon
+
+    const result = simplify(input, {
+      mutate: false,
+      fraction: 0.125,
+    }) as Polygon
+
+    assert.deepStrictEqual(result, outPolygonWithSmallInteriorRingFraction0125Tolerance0)
+  })
+
+  it('should allow fraction overshoot by at most two positions when the last remaining ring is removed', () => {
+    const input = structuredClone(inPolygonWithTriangularInteriorRing) as Polygon
+
+    const result = simplify(input, {
+      mutate: false,
+      fraction: 0.4,
+    }) as Polygon
+
+    assert.deepStrictEqual(result, outPolygonWithTriangularInteriorRingFraction04Tolerance0)
+  })
+
   it('should keep a heavily simplified polygon in MultiPolygon valid', () => {
     const input = structuredClone(inMultiPolygonWithSmallPolygon) as MultiPolygon
 
@@ -161,6 +171,50 @@ describe('simplify() - polygon edge cases', () => {
     }) as MultiPolygon
 
     assert.deepStrictEqual(result, outMultiPolygonWithSmallPolygonFraction0Tolerance1)
+  })
+
+  it('should simplify a shared boundary segment synchronously while both polygons still exist', () => {
+    const input = structuredClone(inMultiPolygonWithSharedBoundarySegment) as MultiPolygon
+
+    const result = simplify(input, {
+      mutate: false,
+      tolerance: 1,
+    }) as MultiPolygon
+
+    assert.deepStrictEqual(result, outMultiPolygonWithSharedBoundarySegmentFraction0Tolerance1)
+  })
+
+  it('should allow one polygon sharing a boundary segment to disappear without forcing the other to disappear', () => {
+    const input = structuredClone(inMultiPolygonWithSharedBoundarySegment) as MultiPolygon
+
+    const result = simplify(input, {
+      mutate: false,
+      fraction: 0.6,
+    }) as MultiPolygon
+
+    assert.deepStrictEqual(result, outMultiPolygonWithSharedBoundarySegmentFraction06Tolerance0)
+  })
+
+  it('should keep shared boundaries aligned until simplified polygons reach triangles and one disappears', () => {
+    const input = structuredClone(inMultiPolygonWithSharedBoundaryRibbon) as MultiPolygon
+
+    assert.strictEqual(input.coordinates.length, 2)
+    assert.ok(input.coordinates[0][0].length > 4)
+    assert.ok(input.coordinates[1][0].length > 4)
+
+    const intermediate = simplify(structuredClone(input), {
+      mutate: false,
+      fraction: 0.7,
+    }) as MultiPolygon
+
+    assert.deepStrictEqual(intermediate, outMultiPolygonWithSharedBoundaryRibbonFraction07Tolerance0)
+
+    const result = simplify(structuredClone(input), {
+      mutate: false,
+      fraction: 0.8,
+    }) as MultiPolygon
+
+    assert.deepStrictEqual(result, outMultiPolygonWithSharedBoundaryRibbonFraction08Tolerance0)
   })
 })
 
@@ -200,7 +254,8 @@ describe('simplify() - combined tolerance and fraction', () => {
       fraction: 0.5,
     })
 
-    assert.ok(countPositions(combined) <= countPositions(toleranceOnly))
-    assert.ok(countPositions(combined) <= countPositions(fractionOnly))
+    assert.deepStrictEqual(toleranceOnly, outSmallPolygonNoCommonPositionsFraction0Tolerance000000096)
+    assert.deepStrictEqual(fractionOnly, outSmallPolygonNoCommonPositionsFraction05Tolerance0)
+    assert.deepStrictEqual(combined, outSmallPolygonNoCommonPositionsFraction05Tolerance000000096)
   })
 })

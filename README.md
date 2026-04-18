@@ -14,7 +14,7 @@ npm i --save simplify-geojson-visvalingam
 
 ## Parameters
 
-*   `geojson` **[GeoJSON][1]** object to be simplified, should extends [GeoJsonObject][6] in TypeScript
+*   `geojson` **[GeoJSON][1]** object to be simplified, should extends [GeoJsonObject][6] in TypeScript; expected to contain valid two-dimensional `[x, y]` coordinates
 *   `options` **[Object][3]** Optional parameters (optional, default `{}`), should be of type [SimplifyOptions][7] in TypeScript
 
     *   `options.tolerance` **[number][4]** simplification tolerance, the minimum Cartesian area of ​​a triangle formed by a point and its two neighbors to preserve that point (optional, default `0`)
@@ -29,6 +29,7 @@ npm i --save simplify-geojson-visvalingam
 * Will remove common points of different geometries simultaneously to preserve common boundaries
 * Will leave valid empty `Feature` objects even if all their geometry will be removed, the GeoJSON structure will remain intact
 * The start and end point of the `LineString` objects will never be removed
+* Expects **valid** two-dimensional GeoJSON coordinates and is designed for `[x, y]` positions
 
 ## Usage
 ### JS

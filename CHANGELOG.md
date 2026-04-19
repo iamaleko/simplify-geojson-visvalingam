@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.6] - 2026-04-19
+
+### Fixed
+- Corrected position grouping for the last sorted coordinate so shared-position ranges are computed consistently
+- This changes simplification output for some multipolygon and shared-boundary cases
+
 ## [1.3.5] - 2026-04-19
 
 ### Fixed

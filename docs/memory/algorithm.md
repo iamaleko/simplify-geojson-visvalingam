@@ -12,6 +12,7 @@ Related file: see `docs/memory/performance.md` for implementation constraints th
 ## Scope
 
 - Public entrypoint: `src/index.ts`
+- Internal algorithm helpers may live in `src/lib/functions.ts`
 - Accepted simplifiable structures:
   - `Feature`
   - `FeatureCollection`
@@ -71,6 +72,8 @@ groupPositions(...)
 deletePositions(...)
 updatePositions(...)
 ```
+
+Internal algorithm helpers may be covered by direct unit tests in `test/functions.unit.test.ts`.
 
 Deletion is computed on a flat index space first and projected back into the original GeoJSON structure afterward.
 
@@ -278,6 +281,7 @@ toDelete = Math.round(n * fraction)
 When algorithm behavior changes, update these together:
 
 - tests and expected fixtures
+- `test/functions.unit.test.ts` when internal helper behavior or invariants change
 - `README.md` if public guarantees change
 - this file if internal mechanics, invariants, or `tolerance` / `fraction` semantics change
 - `docs/memory/performance.md` if the change also affects hot-path structure, heap logic, allocation behavior, or performance rationale

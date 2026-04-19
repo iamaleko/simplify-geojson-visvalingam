@@ -202,6 +202,8 @@ Future edits should not replace these compaction paths with alternate rebuilt ar
 
 Equal coordinates are grouped by sorting point ids, then deriving contiguous group bounds.
 
+Internal hot-path helpers may live in `src/lib/functions.ts` and be covered by direct unit tests in `test/functions.unit.test.ts`.
+
 Current structures:
 
 ```ts

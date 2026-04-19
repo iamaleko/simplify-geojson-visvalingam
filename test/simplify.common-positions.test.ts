@@ -10,6 +10,8 @@ import outSmallMultiLineStringWithCommonPositionsFraction03Tolerance0 from '@tes
 import inSmallMultiPolygonWithCommonPositions from '@test/geojson/in/smallMultiPolygonWithCommonPositions.json'
 import outSmallMultiPolygonWithCommonPositionsFraction0Tolerance000000014 from '@test/geojson/out/smallMultiPolygonWithCommonPositionsFraction0Tolerance000000014.json'
 import outSmallMultiPolygonWithCommonPositionsFraction03Tolerance0 from '@test/geojson/out/smallMultiPolygonWithCommonPositionsFraction03Tolerance0.json'
+import inMultiPolygonSharedFirstCollectedPosition from '@test/geojson/in/multiPolygonSharedFirstCollectedPosition.json'
+import outMultiPolygonSharedFirstCollectedPositionFraction07Tolerance0 from '@test/geojson/out/multiPolygonSharedFirstCollectedPositionFraction07Tolerance0.json'
 
 describe('simplify() - simplification by tolerance with common positions', () => {
   it('should remove all positions except common positions and points when provided tolerance is huge', () => {
@@ -71,6 +73,16 @@ describe('simplify() - simplification by fraction with common positions', () => 
         fraction: 0.3,
       }),
       outSmallMultiPolygonWithCommonPositionsFraction03Tolerance0,
+    )
+  })
+
+  it('should remove all shared candidate positions even when the first collected position belongs to the shared group', () => {
+    assert.deepStrictEqual(
+      simplify(inMultiPolygonSharedFirstCollectedPosition as GeoJsonObject, {
+        mutate: false,
+        fraction: 0.7,
+      }),
+      outMultiPolygonSharedFirstCollectedPositionFraction07Tolerance0,
     )
   })
 })

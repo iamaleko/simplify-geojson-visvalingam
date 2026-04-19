@@ -27,7 +27,7 @@ npm i --save simplify-geojson-visvalingam
 
 * Provides stable simplification and a better level of visual detail than the [Ramer–Douglas–Peucker][8] algorithm
 * Will remove common points of different geometries simultaneously to preserve common boundaries
-* Will leave valid empty `Feature` objects even if all their geometry will be removed, the GeoJSON structure will remain intact
+* May leave valid empty GeoJSON structures when simplification removes all geometric content, while keeping the overall GeoJSON structure intact
 * The start and end point of the `LineString` objects will never be removed
 * Expects **valid** two-dimensional GeoJSON coordinates and is designed for `[x, y]` positions
 

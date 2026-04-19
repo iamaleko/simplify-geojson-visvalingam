@@ -179,6 +179,8 @@ Effect:
 
 ## Geometry behavior
 
+If simplification removes all geometric content from part of the input, the library may leave an empty GeoJSON structure of the same overall kind instead of rewriting the object into a different top-level shape.
+
 ### `LineString`
 
 - all coordinates are collected
@@ -207,6 +209,7 @@ Effect:
 - act as recursive containers
 - overall GeoJSON structure is preserved
 - a `Feature` remains present even if simplification empties its geometry content
+- the library does not require empty results to be represented only through `Feature`; empty geometry-bearing structures may also remain in other valid GeoJSON shapes
 
 ### `GeometryCollection`
 

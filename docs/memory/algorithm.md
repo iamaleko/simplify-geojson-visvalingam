@@ -277,6 +277,16 @@ toDelete = Math.round(n * fraction)
 - polygon exterior rings may disappear
 - shared boundaries are simplified synchronously while linked geometries still exist
 
+## Edge cases and accepted limitations
+
+- A ring that contains repeated identical positions inside the same structure may overshoot the usual `fraction` expectation during whole-ring collapse.
+- This can happen when one repeated position is deleted through normal grouped deletion, the remaining live ring becomes triangular, and the next position in the same group triggers whole-ring removal.
+- The library currently accepts this behavior as an implementation tradeoff:
+  - the case is rare and depends on malformed-ish or degenerate ring input
+  - the current flat working set tracks equal coordinates, but not ownership metadata that would distinguish self-duplicates from shared boundaries across structures
+  - adding owner or chain metadata would increase hot-path memory use and maintenance cost for a low-value edge case
+- The library therefore favors the current fast-path behavior over a more expensive fix for this scenario.
+
 ## Maintenance rule
 
 When algorithm behavior changes, update these together:

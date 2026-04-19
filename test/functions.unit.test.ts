@@ -1,7 +1,7 @@
 import assert from 'assert'
 import { Position } from 'geojson'
 
-import { groupPositions } from '@lib/functions'
+import { deletePositions, groupPositions, type Positions } from '@lib/functions'
 
 function getRangeCoordinates(coordinates: Position[], sortIndexes: Uint32Array, from: number, to: number): string[] {
   const values: string[] = []
@@ -125,5 +125,140 @@ describe('functions - groupPositions()', () => {
         `range for position ${i} contains non-equal coordinates`,
       )
     }
+  })
+})
+
+function createLinePositions(coordinates: Position[]): Positions {
+  return {
+    coordinates,
+    prevIndexes: coordinates.map((_, i) => (i === 0 ? -1 : i - 1)),
+    nextIndexes: coordinates.map((_, i) => (i === coordinates.length - 1 ? -1 : i + 1)),
+  }
+}
+
+function createRingPositions(coordinates: Position[]): Positions {
+  return {
+    coordinates,
+    prevIndexes: coordinates.map((_, i) => (i === 0 ? coordinates.length - 1 : i - 1)),
+    nextIndexes: coordinates.map((_, i) => (i === coordinates.length - 1 ? 0 : i + 1)),
+  }
+}
+
+describe('functions - deletePositions()', () => {
+  it('should delete a single ordinary candidate position in a line', () => {
+    const positions = createLinePositions([
+      [0, 0],
+      [1, 1],
+      [2, 0],
+    ])
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), Number.MAX_SAFE_INTEGER, 0)
+
+    assert.deepStrictEqual(Array.from(result), [0, 1, 0])
+    assert.deepStrictEqual(positions.prevIndexes, [-1, 0, 0])
+    assert.deepStrictEqual(positions.nextIndexes, [2, 2, -1])
+  })
+
+  it('should wait for the whole duplicate group before deleting a grouped position', () => {
+    const positions: Positions = {
+      coordinates: [
+        [0, 0],
+        [1, 1],
+        [2, 0],
+        [1, 1],
+        [3, 0],
+      ],
+      prevIndexes: [-1, 0, 1, -1, 3],
+      nextIndexes: [1, 2, -1, 4, -1],
+    }
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), Number.MAX_SAFE_INTEGER, 0)
+
+    assert.deepStrictEqual(Array.from(result), [0, 0, 0, 0, 0])
+  })
+
+  it('should delete every position in a duplicate group once the whole group is ready', () => {
+    const positions: Positions = {
+      coordinates: [
+        [0, 0],
+        [1, 1],
+        [2, 0],
+        [3, 0],
+        [1, 1],
+        [4, 0],
+      ],
+      prevIndexes: [-1, 0, 1, -1, 3, 4],
+      nextIndexes: [1, 2, -1, 4, 5, -1],
+    }
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), Number.MAX_SAFE_INTEGER, 0)
+
+    assert.deepStrictEqual(Array.from(result), [0, 1, 0, 0, 1, 0])
+    assert.deepStrictEqual(positions.prevIndexes, [-1, 0, 0, -1, 3, 3])
+    assert.deepStrictEqual(positions.nextIndexes, [2, 2, -1, 5, 5, -1])
+  })
+
+  it('should skip stale heap entries after indirect group deletion', () => {
+    const positions: Positions = {
+      coordinates: [
+        [0, 0],
+        [1, 1],
+        [2, 0],
+        [3, 0],
+        [1, 1],
+        [4, 0],
+        [5, 0],
+        [6, 1],
+        [7, 0],
+      ],
+      prevIndexes: [-1, 0, 1, -1, 3, 4, -1, 6, 7],
+      nextIndexes: [1, 2, -1, 4, 5, -1, 7, 8, -1],
+    }
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), Number.MAX_SAFE_INTEGER, 1)
+
+    assert.deepStrictEqual(Array.from(result), [0, 1, 0, 0, 1, 0, 0, 1, 0])
+  })
+
+  it('should remove an entire triangular ring', () => {
+    const positions = createRingPositions([
+      [0, 0],
+      [1, 1],
+      [2, 0],
+    ])
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), Number.MAX_SAFE_INTEGER, 0)
+
+    assert.deepStrictEqual(Array.from(result), [1, 1, 1])
+  })
+
+  it('should count whole-ring removal as three deletions for fraction budget', () => {
+    const positions = createRingPositions([
+      [0, 0],
+      [1, 1],
+      [2, 0],
+    ])
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), 0, 1 / 3)
+
+    assert.deepStrictEqual(Array.from(result), [1, 1, 1])
+  })
+
+  it('should not remove a triangular ring when a neighboring duplicate group is not fully ready', () => {
+    const positions: Positions = {
+      coordinates: [
+        [0, 0],
+        [1, 1],
+        [2, 0],
+        [1, 1],
+        [3, 0],
+      ],
+      prevIndexes: [2, 0, 1, -1, 3],
+      nextIndexes: [1, 2, 0, 4, -1],
+    }
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), Number.MAX_SAFE_INTEGER, 0)
+
+    assert.deepStrictEqual(Array.from(result), [0, 0, 0, 0, 0])
   })
 })

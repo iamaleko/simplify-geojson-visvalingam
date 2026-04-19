@@ -204,6 +204,8 @@ Equal coordinates are grouped by sorting point ids, then deriving contiguous gro
 
 Internal hot-path helpers may live in `src/lib/functions.ts` and be covered by direct unit tests in `test/functions.unit.test.ts`.
 
+Current extracted hot-path helpers include position grouping, heap maintenance, area computation, and deletion-mask generation.
+
 Current structures:
 
 ```ts

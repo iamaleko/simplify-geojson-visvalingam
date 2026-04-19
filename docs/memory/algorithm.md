@@ -13,6 +13,7 @@ Related file: see `docs/memory/performance.md` for implementation constraints th
 
 - Public entrypoint: `src/index.ts`
 - Internal algorithm helpers may live in `src/lib/functions.ts`
+- Current extracted helpers include grouping and deletion logic, including the heap-driven delete phase
 - Accepted simplifiable structures:
   - `Feature`
   - `FeatureCollection`

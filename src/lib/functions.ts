@@ -20,7 +20,12 @@ export function groupPositions(coordinates: Position[]): Groups {
     sortIndexes[i] = i
   }
   sortIndexes.sort((a, b) => {
-    return coordinates[a][0] - coordinates[b][0] || coordinates[a][1] - coordinates[b][1]
+    const deltaX = coordinates[a][0] - coordinates[b][0]
+    if (deltaX) {
+      return deltaX < 0 ? -1 : 1
+    }
+    const deltaY = coordinates[a][1] - coordinates[b][1]
+    return deltaY < 0 ? -1 : deltaY > 0 ? 1 : 0
   })
   if (coordinates.length) {
     groupedTo[sortIndexes[coordinates.length - 1]] = groupedTo.length - 1

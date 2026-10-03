@@ -202,6 +202,8 @@ Future edits should not replace these compaction paths with alternate rebuilt ar
 
 Equal coordinates are grouped by sorting point ids, then deriving contiguous group bounds.
 
+The sort comparator returns only `-1`, `0`, or `1` while preserving lexicographic `x`, then `y` ordering. Small integer comparator results can reduce temporary numeric allocations at the native sort callback boundary. The benefit is engine-dependent.
+
 Internal hot-path helpers may live in `src/lib/functions.ts` and be covered by direct unit tests in `test/functions.unit.test.ts`.
 
 Current extracted hot-path helpers include position grouping, heap maintenance, area computation, and deletion-mask generation.

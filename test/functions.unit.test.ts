@@ -12,6 +12,54 @@ function getRangeCoordinates(coordinates: Position[], sortIndexes: Uint32Array, 
 }
 
 describe('functions - groupPositions()', () => {
+  it('should sort fractional coordinates lexicographically across both signs', () => {
+    const coordinates: Position[] = [
+      [0.25, -0.5],
+      [-0.25, 0.5],
+      [-0.25, -0.5],
+      [0.25, 0.5],
+      [0, 0],
+    ]
+
+    const result = groupPositions(coordinates)
+
+    assert.deepStrictEqual(Array.from(result.sortIndexes), [2, 1, 4, 0, 3])
+    assert.deepStrictEqual(Array.from(result.groupedFrom), [3, 1, 0, 4, 2])
+    assert.deepStrictEqual(Array.from(result.groupedTo), [3, 1, 0, 4, 2])
+  })
+
+  it('should preserve input order within duplicate fractional coordinate groups', () => {
+    const coordinates: Position[] = [
+      [0.25, -0.5],
+      [-0.25, 0.5],
+      [0.25, -0.5],
+      [-0.25, 0.5],
+    ]
+
+    const result = groupPositions(coordinates)
+
+    assert.deepStrictEqual(Array.from(result.sortIndexes), [1, 3, 0, 2])
+    assert.deepStrictEqual(Array.from(result.groupedFrom), [2, 0, 2, 0])
+    assert.deepStrictEqual(Array.from(result.groupedTo), [3, 1, 3, 1])
+  })
+
+  it('should group signed zeros without merging distinct subnormal coordinates', () => {
+    const coordinates: Position[] = [
+      [0, Number.MIN_VALUE],
+      [-0, 0],
+      [0, -0],
+      [0, -Number.MIN_VALUE],
+      [Number.MIN_VALUE, 0],
+      [-Number.MIN_VALUE, 0],
+    ]
+
+    const result = groupPositions(coordinates)
+
+    assert.deepStrictEqual(Array.from(result.sortIndexes), [5, 3, 1, 2, 0, 4])
+    assert.deepStrictEqual(Array.from(result.groupedFrom), [4, 2, 2, 1, 5, 0])
+    assert.deepStrictEqual(Array.from(result.groupedTo), [4, 3, 3, 1, 5, 0])
+  })
+
   it('should group unique positions into singleton ranges', () => {
     const coordinates: Position[] = [
       [10, 10],

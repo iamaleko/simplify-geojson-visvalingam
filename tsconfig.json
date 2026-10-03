@@ -10,7 +10,7 @@
     "noImplicitAny": true,
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowJs": true,
     "sourceMap": true,

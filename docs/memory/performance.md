@@ -417,6 +417,20 @@ Before changing hot-path code, check:
 - Did this remove the whole-ring fast path?
 - Did this change asymptotic behavior or memory profile without benchmarks?
 
+## Benchmark infrastructure
+
+- `bench/generators.ts`: deterministic synthetic geometry families; no real datasets or downloads.
+- `bench/scenarios.ts`: 12 quick scenarios or 180 full scenarios; both mutation modes.
+- `bench/run.ts` and `bench/worker.ts`: compiled Node workers; one scenario per fresh process per repeat.
+- Timing uses Tinybench warmup and synchronous measured calls against a compiled public ESM build.
+- Mutating calls receive fresh clones in untimed hooks; non-mutating calls include internal cloning.
+- Memory runs use a separate single-call process with forced GC before the call. RSS high-water includes preparation; memory snapshots are not allocation peaks.
+- `bench/report.ts` and `bench/compare.ts`: compare medians across process repeats; reject changed environments, harnesses, settings, scenarios, inputs, or outputs.
+- JSON reports include input/output hashes and collected-position counts, excluding ring closure.
+- `test/benchmark.test.ts`: generator reproducibility, shared-boundary topology, mutation-mode equivalence, and comparison rejection cases.
+- `.github/workflows/benchmark.yml`: manual comparison of two builds on one runner; report artifacts; no numerical performance gate.
+- `.bench-build/` and `.bench-results/` are generated and ignored. See `bench/README.md` for commands and interpretation limits.
+
 ## Synchronization rule
 
 When hot-path behavior, memory layout, heap logic, validation scope, or performance rationale changes, update this file together with:

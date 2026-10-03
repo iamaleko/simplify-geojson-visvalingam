@@ -1,2 +1,4 @@
 node_modules/
 dist/
+.bench-build/
+.bench-results/

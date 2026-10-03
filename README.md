@@ -31,6 +31,10 @@ npm i --save simplify-geojson-visvalingam
 * The start and end point of the `LineString` objects will never be removed
 * Expects **valid** two-dimensional GeoJSON coordinates and is designed for `[x, y]` positions
 
+## Performance benchmarks
+
+Run `npm run bench` for synthetic timing scenarios, `npm run bench:memory` for separate memory measurements, and `npm run bench:compare -- baseline.json candidate.json` to compare reports. See [benchmark methodology and commands](bench/README.md) for reproducible data, measurement boundaries, profiling, and CI.
+
 ## Usage
 ### JS
 ```javascript

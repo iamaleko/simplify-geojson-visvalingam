@@ -45,7 +45,11 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier '**/*.{ts,js,json}' --ignore-path .prettierignore --write",
     "build": "npm run lint && npm run typecheck && npm run test && tsup",
-    "playground": "npx tsx watch playground/index.ts"
+    "playground": "npx tsx watch playground/index.ts",
+    "bench:prepare": "tsup && tsup --config bench/tsup.config.ts",
+    "bench": "npm run bench:prepare && node .bench-build/run.js",
+    "bench:memory": "npm run bench:prepare && node .bench-build/run.js --mode memory",
+    "bench:compare": "node --import tsx bench/compare.ts"
   },
   "repository": {
     "type": "git",
@@ -55,11 +59,13 @@
     "@types/assert": "^1.5.11",
     "@types/geojson": "^7946.0.16",
     "@types/mocha": "^10.0.10",
+    "@types/node": "^24.19.1",
     "eslint": "^9.25.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
     "mocha": "^11.1.0",
     "prettier": "3.5.3",
+    "tinybench": "^6.2.0",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",

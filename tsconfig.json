@@ -1,5 +1,5 @@
 {
-  "include": ["./src/**/*", "./test/**/*", "./playground/**/*"],
+  "include": ["./src/**/*", "./test/**/*", "./playground/**/*", "./bench/**/*"],
   "compilerOptions": {
     "paths": {
       "@src/*": ["./src/*"],

@@ -23,15 +23,13 @@ export function scenarios(suite: 'quick' | 'full', size?: number): Scenario[] {
         ]
   return sizes.flatMap((n) =>
     families.flatMap((family) =>
-      settings.flatMap(({ name, options }) =>
-        [true, false].map((mutate) => ({
-          id: `${family}/${n}/${name}/${mutate ? 'mutate' : 'clone'}`,
-          family,
-          size: n,
-          seed: 20261002,
-          options: { ...options, mutate },
-        })),
-      ),
+      settings.map(({ name, options }) => ({
+        id: `${family}/${n}/${name}/mutate`,
+        family,
+        size: n,
+        seed: 20261002,
+        options: { ...options, mutate: true },
+      })),
     ),
   )
 }

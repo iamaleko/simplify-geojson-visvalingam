@@ -10,7 +10,7 @@ npm run bench -- --out .bench-results/baseline-time.json
 npm run bench:memory -- --out .bench-results/baseline-memory.json
 ```
 
-Both commands rebuild the library and native JavaScript benchmark workers. The default `quick` suite contains 12 scenarios: six geometry families, 10,000 requested positions, `fraction: 0.5`, and both mutation modes. Each scenario runs in three independent child processes, sequentially. Timing uses a 300 ms warmup and a 1,000 ms measurement budget, with at least four warmup calls and 16 measured calls. These are minimum budgets, not deadlines; large geometries can take longer.
+Both commands rebuild the library and native JavaScript benchmark workers. The default `quick` suite contains six mutating scenarios: six geometry families, 10,000 requested positions, and `fraction: 0.5`. Each scenario runs in three independent child processes, sequentially. Timing uses a 300 ms warmup and a 1,000 ms measurement budget, with at least four warmup calls and 16 measured calls. These are minimum budgets, not deadlines; large geometries can take longer.
 
 For a short infrastructure check:
 
@@ -35,6 +35,8 @@ npm run bench:compare -- .bench-results/baseline-memory.json .bench-results/cand
 Negative changes indicate lower elapsed time or lower peak RSS. Each comparison value is the median of the independent process measurements. Inspect individual repeat results and their spread in the JSON report; the percentage change alone is not evidence of statistical significance.
 
 The comparator rejects different environments, harnesses, generators, measurement settings, scenario definitions, inputs, outputs, position counts, missing repeats, and invalid primary measurements. A change in output must be investigated before a performance comparison is accepted. Behavioral fixes may require a new baseline.
+
+Reports from the former mutating/cloning scenario set are incompatible with the current set. Regenerate both baseline and candidate reports before comparing.
 
 If you edit the harness or update Tinybench, regenerate both reports. The runner hashes its own compiled code, the compiled worker, and Tinybench's entrypoint. It also records the target module hash, commit, dirty status, Node/V8 versions, CPU model, architecture, and OS platform. The target hash is authoritative when using a copied build; its commit can be unavailable outside a Git checkout.
 
@@ -62,7 +64,7 @@ For small improvements, repeat the comparison with the version order reversed. R
 
 The seed is fixed at `20261002`. Noisy geometries use an explicit deterministic integer PRNG. Shared coordinates have equal numeric values but are separate objects, as with parsed JSON. Ring closures are explicitly repeated. Position counts exclude ring closure and match the algorithm's collected working set. Shared-boundary sizes round down to a multiple of eight; reports include actual counts.
 
-`full` contains 180 scenarios: the six families, 1,000/10,000/100,000 positions, both mutation modes, fractions 0.1/0.5/0.9, tolerance 0.0001, and combined tolerance/fraction. Coordinates are synthetic Cartesian values; the tolerance is a fixed area threshold, not meters. Actual removal rates vary and are recorded.
+`full` contains 90 mutating scenarios: the six families, 1,000/10,000/100,000 positions, fractions 0.1/0.5/0.9, tolerance 0.0001, and combined tolerance/fraction. Coordinates are synthetic Cartesian values; the tolerance is a fixed area threshold, not meters. Actual removal rates vary and are recorded.
 
 ```bash
 npm run bench -- --list
@@ -77,9 +79,8 @@ npm run bench -- --filter shared-boundary --size 1000000 --out .bench-results/sh
 
 - Measurement uses the compiled public library, not TypeScript transpilation.
 - Generation, file access, hashing, correctness checks, and reporting are outside timed calls.
-- `clone`: `mutate: false`; timing includes the library's internal `structuredClone`.
-- `mutate`: `mutate: true`; a fresh input clone is prepared before every warmup and measured iteration in Tinybench's untimed `beforeEach` hook.
-- Timing workers do not force GC. Preparing inputs still creates allocation pressure and can affect GC during measured calls. Keep the two modes separate; do not subtract clone time from total time.
+- All scenarios use `mutate: true`; a fresh input clone is prepared before every warmup and measured iteration in Tinybench's untimed `beforeEach` hook. The preflight check also clones the input outside the timed interval.
+- Timing workers do not force GC. Preparing inputs still creates allocation pressure and can affect GC during measured calls.
 - A preflight output hash is checked against the last measured output. The shared source must remain unchanged. Independent repeats must produce identical hashes and counts.
 
 Timing reports contain median, mean, p99, standard deviation, relative margin of error, and sample count for each process repeat. Tinybench's error estimate is within one process; it does not account for machine drift between process runs.
@@ -104,6 +105,6 @@ Native Node CPU profiles are saved under `.bench-results/profiles/`; open them i
 
 Commit generators, seeds, scenarios, runner/comparator code, tests, and methodology. Generated builds, reports, and profiles are ignored. Change `generatorVersion` when generator semantics change. JSON schema changes require a schema version change and corresponding reader updates.
 
-The manual GitHub Actions workflow `Performance benchmarks` builds a selected baseline ref and the selected workflow ref, then runs the same candidate harness against both builds on one runner. It stores time/memory reports and comparison files as artifacts. There is no automatic performance threshold. If comparison fails because outputs or metadata differ, inspect the reports before interpreting timings. Hosted runners are noisy; confirm small gains locally.
+The manual GitHub Actions workflow `Performance benchmarks` builds a selected baseline ref and the selected workflow ref, then runs the same candidate harness against both builds on one runner. It runs the six mutating quick scenarios at 100,000 requested positions with three process repeats, while the local `quick` default remains 10,000. It stores time/memory reports and comparison files as artifacts. There is no automatic performance threshold. If comparison fails because outputs or metadata differ, inspect the reports before interpreting timings. Hosted runners are noisy; confirm small gains locally.
 
 Tests for generator reproducibility, topology, mode equivalence, and comparator compatibility live in `test/benchmark.test.ts`. Performance results are not asserted in the Mocha suite.

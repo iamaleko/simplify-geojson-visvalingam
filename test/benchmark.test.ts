@@ -73,12 +73,14 @@ describe('benchmark generators', () => {
     assert.notEqual(hash(generate('noisy-line', 128, 1)), hash(generate('noisy-line', 128, 2)))
   })
 
-  it('should cover both mutation modes with unique scenario IDs', () => {
+  it('should select only mutating scenarios with unique IDs', () => {
     const selected = scenarios('quick')
-    assert.equal(selected.length, 12)
-    assert.equal(new Set(selected.map((scenario) => scenario.id)).size, 12)
-    assert.equal(selected.filter((scenario) => scenario.options.mutate).length, 6)
-    assert.equal(scenarios('full').length, 180)
+    assert.equal(selected.length, 6)
+    assert.equal(new Set(selected.map((scenario) => scenario.id)).size, 6)
+    assert.ok(selected.every((scenario) => scenario.options.mutate === true && scenario.id.endsWith('/mutate')))
+    const full = scenarios('full')
+    assert.equal(full.length, 90)
+    assert.ok(full.every((scenario) => scenario.options.mutate === true && scenario.id.endsWith('/mutate')))
   })
 
   it('should reject unsupported input sizes', () => {

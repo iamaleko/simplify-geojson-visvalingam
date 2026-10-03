@@ -17,14 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: candidate
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ inputs.baseline_ref }}
           path: baseline
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 24.12.0
           cache: npm
@@ -45,13 +45,13 @@ jobs:
       - name: Measure baseline with candidate harness
         working-directory: candidate
         run: |
-          node .bench-build/run.js --module ../baseline/dist/index.js --out .bench-results/baseline-time.json
-          node .bench-build/run.js --mode memory --module ../baseline/dist/index.js --out .bench-results/baseline-memory.json
+          node .bench-build/run.js --size 100000 --module ../baseline/dist/index.js --out .bench-results/baseline-time.json
+          node .bench-build/run.js --size 100000 --mode memory --module ../baseline/dist/index.js --out .bench-results/baseline-memory.json
       - name: Measure candidate
         working-directory: candidate
         run: |
-          node .bench-build/run.js --out .bench-results/candidate-time.json
-          node .bench-build/run.js --mode memory --out .bench-results/candidate-memory.json
+          node .bench-build/run.js --size 100000 --out .bench-results/candidate-time.json
+          node .bench-build/run.js --size 100000 --mode memory --out .bench-results/candidate-memory.json
       - name: Compare time
         working-directory: candidate
         run: npm run bench:compare -- .bench-results/baseline-time.json .bench-results/candidate-time.json --out .bench-results/comparison-time.json
@@ -59,9 +59,10 @@ jobs:
         if: ${{ !cancelled() }}
         working-directory: candidate
         run: npm run bench:compare -- .bench-results/baseline-memory.json .bench-results/candidate-memory.json --out .bench-results/comparison-memory.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: benchmark-reports
           path: candidate/.bench-results/
           if-no-files-found: warn
+          include-hidden-files: true

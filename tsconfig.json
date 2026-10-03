@@ -1,6 +1,7 @@
 {
   "include": ["./src/**/*", "./test/**/*", "./playground/**/*", "./bench/**/*"],
   "compilerOptions": {
+    "types": ["node", "mocha"],
     "paths": {
       "@src/*": ["./src/*"],
       "@lib/*": ["./src/lib/*"],

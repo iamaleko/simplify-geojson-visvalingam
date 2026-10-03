@@ -422,10 +422,10 @@ Before changing hot-path code, check:
 ## Benchmark infrastructure
 
 - `bench/generators.ts`: deterministic synthetic geometry families; no real datasets or downloads.
-- `bench/scenarios.ts`: 12 quick scenarios or 180 full scenarios; both mutation modes.
+- `bench/scenarios.ts`: six quick scenarios or 90 full scenarios; all use `mutate: true`.
 - `bench/run.ts` and `bench/worker.ts`: compiled Node workers; one scenario per fresh process per repeat.
 - Timing uses Tinybench warmup and synchronous measured calls against a compiled public ESM build.
-- Mutating calls receive fresh clones in untimed hooks; non-mutating calls include internal cloning.
+- Mutating calls receive fresh clones in untimed hooks; no measured scenario includes the library's internal cloning path.
 - Memory runs use a separate single-call process with forced GC before the call. RSS high-water includes preparation; memory snapshots are not allocation peaks.
 - `bench/report.ts` and `bench/compare.ts`: compare medians across process repeats; reject changed environments, harnesses, settings, scenarios, inputs, or outputs.
 - JSON reports include input/output hashes and collected-position counts, excluding ring closure.

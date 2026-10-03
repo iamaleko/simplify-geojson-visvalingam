@@ -286,6 +286,7 @@ Reason:
 
 - if `heap[pos] = pointId`, then `heapRev[pointId] = pos`
 - `heapswap(...)` updates both structures together
+- `heapsink(...)` moves child ids upward and updates their reverse indexes, then writes the original id and its reverse index once at the final slot
 
 Future edits must preserve this invariant. Do not remove `heapRev` and reintroduce heap searches for updates.
 

@@ -79,15 +79,24 @@ function heapsink(
   priority: Float64Array,
   coordinates: Position[],
 ): number {
+  const value = heap[i]
   let l: number, r: number, t: number
+  let selected: number
   while (true) {
     t = i
-    if ((l = i << 1) <= heap[0] && heapcompare(heap[t], heap[l], priority, coordinates) > 0) t = l
-    if ((r = l + 1) <= heap[0] && heapcompare(heap[t], heap[r], priority, coordinates) > 0) t = r
+    selected = value
+    if ((l = i << 1) <= heap[0] && heapcompare(selected, heap[l], priority, coordinates) > 0) {
+      t = l
+      selected = heap[l]
+    }
+    if ((r = l + 1) <= heap[0] && heapcompare(selected, heap[r], priority, coordinates) > 0) t = r
     if (i === t) break
-    heapswap(heap, heapRev, i, t)
+    heap[i] = heap[t]
+    heapRev[heap[i]] = i
     i = t
   }
+  heap[i] = value
+  heapRev[value] = i
   return i
 }
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.8] - 2026-10-04
+
+### Changed
+- Optimized heap sifting; 5.6% lower geometric-mean runtime and 1.6% lower geometric-mean peak RSS across six mutating benchmark scenarios with 100,000 positions
+
 ## [1.3.7] - 2026-10-04
 
 ### Changed

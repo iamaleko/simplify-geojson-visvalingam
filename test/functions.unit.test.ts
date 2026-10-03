@@ -193,6 +193,30 @@ function createRingPositions(coordinates: Position[]): Positions {
 }
 
 describe('functions - deletePositions()', () => {
+  it('should preserve deletion order through repeated heap repairs', () => {
+    const positions = createLinePositions([
+      [0, 0],
+      [1, 5],
+      [2, 0],
+      [3, 1],
+      [4, 0],
+      [5, 4],
+      [6, 0],
+      [7, 3],
+      [8, 0],
+      [9, 2],
+      [10, 0],
+    ])
+
+    const result = deletePositions(positions, groupPositions(positions.coordinates), 0, 0.5)
+
+    assert.deepStrictEqual(Array.from(result), [0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0])
+    assert.deepStrictEqual(
+      positions.nextIndexes.filter((_, index) => !result[index]),
+      [2, 5, 6, 10, -1],
+    )
+  })
+
   it('should delete a single ordinary candidate position in a line', () => {
     const positions = createLinePositions([
       [0, 0],

@@ -10,7 +10,7 @@ npm run bench -- --out .bench-results/baseline-time.json
 npm run bench:memory -- --out .bench-results/baseline-memory.json
 ```
 
-Both commands rebuild the library and native JavaScript benchmark workers. The default `quick` suite contains six mutating scenarios: six geometry families, 10,000 requested positions, and `fraction: 0.5`. Each scenario runs in three independent child processes, sequentially. Timing uses a 300 ms warmup and a 1,000 ms measurement budget, with at least four warmup calls and 16 measured calls. These are minimum budgets, not deadlines; large geometries can take longer.
+Both commands rebuild the library and native JavaScript benchmark workers. The default `quick` suite contains seven mutating scenarios: seven geometry families, 10,000 requested positions, and `fraction: 0.5`. Each scenario runs in three independent child processes, sequentially. Timing uses a 300 ms warmup and a 1,000 ms measurement budget, with at least four warmup calls and 16 measured calls. These are minimum budgets, not deadlines; large geometries can take longer.
 
 For a short infrastructure check:
 
@@ -59,12 +59,13 @@ For small improvements, repeat the comparison with the version order reversed. R
 | `short-lines` | Many independent lines of about 32 positions |
 | `polygon-holes` | One polygon with two interior rings |
 | `shared-boundary` | Two adjacent polygons with an exactly identical curved boundary in opposite traversal directions |
+| `country-mosaic` | Irregular polygon mosaic; interior borders are reused by neighbors in opposite traversal directions |
 | `collinear-line` | Collinear positions, zero areas, and equal-priority candidates |
 | `feature-collection` | Many small polygon features with properties |
 
-The seed is fixed at `20261002`. Noisy geometries use an explicit deterministic integer PRNG. Shared coordinates have equal numeric values but are separate objects, as with parsed JSON. Ring closures are explicitly repeated. Position counts exclude ring closure and match the algorithm's collected working set. Shared-boundary sizes round down to a multiple of eight; reports include actual counts.
+The seed is fixed at `20261002`. Noisy geometries use an explicit deterministic integer PRNG. Shared coordinates have equal numeric values but are separate objects, as with parsed JSON. Ring closures are explicitly repeated. Position counts exclude ring closure and match the algorithm's collected working set. Shared-boundary sizes round down to a multiple of eight. Country-mosaic uses up to an 8×8 grid and rounds to a whole number of segments per edge. Reports include actual counts.
 
-`full` contains 90 mutating scenarios: the six families, 1,000/10,000/100,000 positions, fractions 0.1/0.5/0.9, tolerance 0.0001, and combined tolerance/fraction. Coordinates are synthetic Cartesian values; the tolerance is a fixed area threshold, not meters. Actual removal rates vary and are recorded.
+`full` contains 105 mutating scenarios: the seven families, 1,000/10,000/100,000 positions, fractions 0.1/0.5/0.9, tolerance 0.0001, and combined tolerance/fraction. Coordinates are synthetic Cartesian values; the tolerance is a fixed area threshold, not meters. Actual removal rates vary and are recorded.
 
 ```bash
 npm run bench -- --list
@@ -105,6 +106,6 @@ Native Node CPU profiles are saved under `.bench-results/profiles/`; open them i
 
 Commit generators, seeds, scenarios, runner/comparator code, tests, and methodology. Generated builds, reports, and profiles are ignored. Change `generatorVersion` when generator semantics change. JSON schema changes require a schema version change and corresponding reader updates.
 
-The manual GitHub Actions workflow `Performance benchmarks` builds a selected baseline ref and the selected workflow ref, then runs the same candidate harness against both builds on one runner. It runs the six mutating quick scenarios at 100,000 requested positions with three process repeats, while the local `quick` default remains 10,000. It stores time/memory reports and comparison files as artifacts. There is no automatic performance threshold. If comparison fails because outputs or metadata differ, inspect the reports before interpreting timings. Hosted runners are noisy; confirm small gains locally.
+The manual GitHub Actions workflow `Performance benchmarks` builds a selected baseline ref and the selected workflow ref, then runs the same candidate harness against both builds on one runner. It runs the seven mutating quick scenarios at 100,000 requested positions with three process repeats, while the local `quick` default remains 10,000. It stores time/memory reports and comparison files as artifacts. There is no automatic performance threshold. If comparison fails because outputs or metadata differ, inspect the reports before interpreting timings. Hosted runners are noisy; confirm small gains locally.
 
 Tests for generator reproducibility, topology, mode equivalence, and comparator compatibility live in `test/benchmark.test.ts`. Performance results are not asserted in the Mocha suite.

@@ -181,6 +181,8 @@ Effect:
 - neighboring geometries remain aligned for longer
 - one geometry may still collapse under strong simplification, but shared boundaries do not drift before that happens due to asymmetric point removal
 
+`test/geojson/in/regionalMosaicWithInteriorAndJunctionLakes.json` is a static 4×4 regional mosaic with 480 collected positions, variable border density, an interior lake, and a lake shared by four regions. Its coordinates stay within longitude/latitude bounds; exterior rings are counterclockwise and the interior ring is clockwise. `test/simplify.common-positions.test.ts` checks its `fraction: 0.5` output fixture and preserved region and lake shorelines.
+
 ## Geometry behavior
 
 If simplification removes all geometric content from part of the input, the library may leave an empty GeoJSON structure of the same overall kind instead of rewriting the object into a different top-level shape.

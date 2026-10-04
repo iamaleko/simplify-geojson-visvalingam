@@ -422,8 +422,8 @@ Before changing hot-path code, check:
 
 ## Benchmark infrastructure
 
-- `bench/generators.ts`: deterministic synthetic geometry families; no real datasets or downloads.
-- `bench/scenarios.ts`: six quick scenarios or 90 full scenarios; all use `mutate: true`.
+- `bench/generators.ts`: deterministic synthetic geometry families, including a country-like polygon mosaic with exact shared borders; no real datasets or downloads.
+- `bench/scenarios.ts`: seven quick scenarios or 105 full scenarios; all use `mutate: true`.
 - `bench/run.ts` and `bench/worker.ts`: compiled Node workers; one scenario per fresh process per repeat.
 - Timing uses Tinybench warmup and synchronous measured calls against a compiled public ESM build.
 - Mutating calls receive fresh clones in untimed hooks; no measured scenario includes the library's internal cloning path.

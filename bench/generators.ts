@@ -1,11 +1,12 @@
 import type { FeatureCollection, Geometry, Position } from 'geojson'
 
-export const generatorVersion = 1
+export const generatorVersion = 2
 export const families = [
   'noisy-line',
   'short-lines',
   'polygon-holes',
   'shared-boundary',
+  'country-mosaic',
   'collinear-line',
   'feature-collection',
 ] as const
@@ -41,6 +42,18 @@ function edge(from: Position, to: Position, n: number): Position[] {
     from[0] + ((to[0] - from[0]) * i) / n,
     from[1] + ((to[1] - from[1]) * i) / n,
   ])
+}
+
+function border(from: Position, to: Position, segments: number, random: () => number): Position[] {
+  const deltaX = to[0] - from[0]
+  const deltaY = to[1] - from[1]
+  return Array.from({ length: segments + 1 }, (_, index) => {
+    if (index === 0) return from
+    if (index === segments) return to
+    const fraction = index / segments
+    const bend = (random() - 0.5) * 0.12 * Math.sin(Math.PI * fraction)
+    return [from[0] + deltaX * fraction - deltaY * bend, from[1] + deltaY * fraction + deltaX * bend]
+  })
 }
 
 export function generate(family: Family, size: number, seed: number): Geometry | FeatureCollection {
@@ -93,6 +106,45 @@ export function generate(family: Family, size: number, seed: number): Geometry |
       left.push([...left[0]])
       right.push([...right[0]])
       return { type: 'MultiPolygon', coordinates: [[left], [right]] }
+    }
+    case 'country-mosaic': {
+      const gridSize = Math.min(8, Math.max(2, Math.floor(Math.sqrt(size / 8))))
+      const segments = Math.max(2, Math.round(size / (4 * gridSize * gridSize)))
+      const vertices = Array.from({ length: gridSize + 1 }, (_, row) =>
+        Array.from(
+          { length: gridSize + 1 },
+          (_, column): Position => [column + (random() - 0.5) * 0.18, row + (random() - 0.5) * 0.18],
+        ),
+      )
+      const horizontal = Array.from({ length: gridSize + 1 }, (_, row) =>
+        Array.from({ length: gridSize }, (_, column) =>
+          border(vertices[row][column], vertices[row][column + 1], segments, random),
+        ),
+      )
+      const vertical = Array.from({ length: gridSize }, (_, row) =>
+        Array.from({ length: gridSize + 1 }, (_, column) =>
+          border(vertices[row][column], vertices[row + 1][column], segments, random),
+        ),
+      )
+      return {
+        type: 'FeatureCollection',
+        features: Array.from({ length: gridSize * gridSize }, (_, index) => {
+          const row = Math.floor(index / gridSize)
+          const column = index % gridSize
+          const coordinates = [
+            ...horizontal[row][column].slice(0, -1),
+            ...vertical[row][column + 1].slice(0, -1),
+            ...horizontal[row + 1][column].slice(1).reverse(),
+            ...vertical[row][column].slice(1).reverse(),
+          ].map((position) => [...position])
+          coordinates.push([...coordinates[0]])
+          return {
+            type: 'Feature',
+            properties: { id: index },
+            geometry: { type: 'Polygon', coordinates: [coordinates] },
+          }
+        }),
+      }
     }
     case 'feature-collection': {
       const count = Math.ceil(size / 128)

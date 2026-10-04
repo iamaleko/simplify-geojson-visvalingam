@@ -8,7 +8,7 @@ function report(): Report {
   const scenario = scenarios('quick', 128)[0]
   return {
     schemaVersion: 1,
-    generatorVersion: 1,
+    generatorVersion: 2,
     createdAt: '2026-10-02T00:00:00.000Z',
     mode: 'time',
     config: { suite: 'quick', repeats: 1, timeMs: 1000, warmupMs: 300, cpuProfile: false },
@@ -69,17 +69,58 @@ describe('benchmark generators', () => {
     }
   })
 
+  it('should give every country mosaic polygon shared borders with multiple neighbors', () => {
+    const input = generate('country-mosaic', 1024, 42)
+    assert.equal(input.type, 'FeatureCollection')
+    if (input.type !== 'FeatureCollection') throw new Error('Expected FeatureCollection')
+    assert.equal(input.features.length, 64)
+    assert.equal(countPositions(input), 1024)
+
+    const edges = new Map<string, { polygons: number[]; directions: number[] }>()
+    input.features.forEach((feature, polygonIndex) => {
+      assert.equal(feature.geometry?.type, 'Polygon')
+      if (feature.geometry?.type !== 'Polygon') throw new Error('Expected Polygon')
+      const ring = feature.geometry.coordinates[0]
+      assert.deepStrictEqual(ring[0], ring[ring.length - 1])
+      for (let i = 0; i < ring.length - 1; i++) {
+        const from = JSON.stringify(ring[i])
+        const to = JSON.stringify(ring[i + 1])
+        const key = from < to ? `${from}|${to}` : `${to}|${from}`
+        const edge = edges.get(key) ?? { polygons: [], directions: [] }
+        edge.polygons.push(polygonIndex)
+        edge.directions.push(from < to ? 1 : -1)
+        edges.set(key, edge)
+      }
+    })
+
+    const neighbors = Array.from({ length: 64 }, () => new Set<number>())
+    let sharedEdges = 0
+    for (const edge of edges.values()) {
+      assert.ok(edge.polygons.length === 1 || edge.polygons.length === 2)
+      if (edge.polygons.length === 2) {
+        sharedEdges++
+        assert.equal(edge.directions[0], -edge.directions[1])
+        neighbors[edge.polygons[0]].add(edge.polygons[1])
+        neighbors[edge.polygons[1]].add(edge.polygons[0])
+      }
+    }
+    assert.equal(sharedEdges, 448)
+    assert.ok(neighbors.every((polygonNeighbors) => polygonNeighbors.size >= 2))
+    assert.equal(neighbors[27].size, 4)
+    assert.deepStrictEqual(input, generate('country-mosaic', 1024, 42))
+  })
+
   it('should use seeds to change noisy geometry', () => {
     assert.notEqual(hash(generate('noisy-line', 128, 1)), hash(generate('noisy-line', 128, 2)))
   })
 
   it('should select only mutating scenarios with unique IDs', () => {
     const selected = scenarios('quick')
-    assert.equal(selected.length, 6)
-    assert.equal(new Set(selected.map((scenario) => scenario.id)).size, 6)
+    assert.equal(selected.length, 7)
+    assert.equal(new Set(selected.map((scenario) => scenario.id)).size, 7)
     assert.ok(selected.every((scenario) => scenario.options.mutate === true && scenario.id.endsWith('/mutate')))
     const full = scenarios('full')
-    assert.equal(full.length, 90)
+    assert.equal(full.length, 105)
     assert.ok(full.every((scenario) => scenario.options.mutate === true && scenario.id.endsWith('/mutate')))
   })
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.9] - 2026-10-04
+
+### Changed
+- Replaced coordinate sorting with input-order grouping; 7.5–30.5% lower median runtime and 2.4–17.2% higher peak RSS across mutating benchmarks with 100,000 positions
+
 ## [1.3.8] - 2026-10-04
 
 ### Changed

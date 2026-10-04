@@ -7,51 +7,59 @@ export type Positions = {
 }
 
 export type Groups = {
-  sortIndexes: Uint32Array
-  groupedFrom: Uint32Array
-  groupedTo: Uint32Array
+  groupOf: Uint32Array
+  groupSize: Uint32Array
+  nextInGroup: Uint32Array
 }
 
 export function groupPositions(coordinates: Position[]): Groups {
-  const sortIndexes = new Uint32Array(coordinates.length)
-  const groupedFrom = new Uint32Array(coordinates.length)
-  const groupedTo = new Uint32Array(coordinates.length)
+  const groupOf = new Uint32Array(coordinates.length)
+  const groupSize = new Uint32Array(coordinates.length)
+  const nextInGroup = new Uint32Array(coordinates.length)
+  const groupTail = new Uint32Array(coordinates.length)
+  const groupsByX = new Map<number, number | Map<number, number>>()
   for (let i = 0; i < coordinates.length; i++) {
-    sortIndexes[i] = i
-  }
-  sortIndexes.sort((a, b) => {
-    const deltaX = coordinates[a][0] - coordinates[b][0]
-    if (deltaX) {
-      return deltaX < 0 ? -1 : 1
-    }
-    const deltaY = coordinates[a][1] - coordinates[b][1]
-    return deltaY < 0 ? -1 : deltaY > 0 ? 1 : 0
-  })
-  if (coordinates.length) {
-    groupedTo[sortIndexes[coordinates.length - 1]] = groupedTo.length - 1
-  }
-  for (let i = 1, j = coordinates.length - 2; i < coordinates.length; i++, j--) {
-    if (
-      coordinates[sortIndexes[i]][0] !== coordinates[sortIndexes[i - 1]][0] ||
-      coordinates[sortIndexes[i]][1] !== coordinates[sortIndexes[i - 1]][1]
-    ) {
-      groupedFrom[sortIndexes[i]] = i
+    const x = coordinates[i][0]
+    const y = coordinates[i][1]
+    const byX = groupsByX.get(x)
+    let root: number
+    if (byX === undefined) {
+      root = i
+      groupsByX.set(x, i)
+    } else if (typeof byX === 'number') {
+      if (coordinates[byX][1] === y) {
+        root = byX
+      } else {
+        root = i
+        const byY = new Map<number, number>()
+        byY.set(coordinates[byX][1], byX)
+        byY.set(y, i)
+        groupsByX.set(x, byY)
+      }
     } else {
-      groupedFrom[sortIndexes[i]] = groupedFrom[sortIndexes[i - 1]]
+      const existing = byX.get(y)
+      if (existing === undefined) {
+        root = i
+        byX.set(y, i)
+      } else {
+        root = existing
+      }
     }
-    if (
-      coordinates[sortIndexes[j]][0] !== coordinates[sortIndexes[j + 1]][0] ||
-      coordinates[sortIndexes[j]][1] !== coordinates[sortIndexes[j + 1]][1]
-    ) {
-      groupedTo[sortIndexes[j]] = j
+    groupOf[i] = root
+    if (root === i) {
+      groupSize[root] = 1
+      groupTail[root] = i
     } else {
-      groupedTo[sortIndexes[j]] = groupedTo[sortIndexes[j + 1]]
+      groupSize[root]++
+      nextInGroup[groupTail[root]] = i
+      groupTail[root] = i
     }
+    nextInGroup[i] = coordinates.length
   }
   return {
-    sortIndexes,
-    groupedFrom,
-    groupedTo,
+    groupOf,
+    groupSize,
+    nextInGroup,
   }
 }
 
@@ -158,7 +166,7 @@ export function deletePositions(positions: Positions, groups: Groups, tolerance:
   const isDeleted = new Uint8Array(n)
   let toDelete = Math.round(n * fraction)
 
-  const candidatesByGroupFrom = new Uint32Array(n)
+  const candidatesByGroup = new Uint32Array(n)
   const isCandidate = new Uint8Array(n)
 
   const heap = new Uint32Array(n + 1)
@@ -187,18 +195,20 @@ export function deletePositions(positions: Positions, groups: Groups, tolerance:
       break
     }
 
+    const groupId = groups.groupOf[i]
     if (!isCandidate[i]) {
       isCandidate[i] = 1
-      candidatesByGroupFrom[groups.groupedFrom[i]]++
+      candidatesByGroup[groupId]++
     }
 
-    if (candidatesByGroupFrom[groups.groupedFrom[i]] !== groups.groupedTo[i] - groups.groupedFrom[i] + 1) {
+    if (candidatesByGroup[groupId] !== groups.groupSize[groupId]) {
       continue
     }
 
-    for (let k: number, j = groups.groupedFrom[i]; j <= groups.groupedTo[i]; j++) {
-      k = groups.sortIndexes[j]
+    let k = groupId
+    while (k < n) {
       if (isDeleted[k]) {
+        k = groups.nextInGroup[k]
         continue
       }
 
@@ -209,24 +219,25 @@ export function deletePositions(positions: Positions, groups: Groups, tolerance:
       ) {
         if (!isCandidate[positions.prevIndexes[k]]) {
           isCandidate[positions.prevIndexes[k]] = 1
-          candidatesByGroupFrom[groups.groupedFrom[positions.prevIndexes[k]]]++
+          candidatesByGroup[groups.groupOf[positions.prevIndexes[k]]]++
         }
         if (!isCandidate[positions.nextIndexes[k]]) {
           isCandidate[positions.nextIndexes[k]] = 1
-          candidatesByGroupFrom[groups.groupedFrom[positions.nextIndexes[k]]]++
+          candidatesByGroup[groups.groupOf[positions.nextIndexes[k]]]++
         }
 
         if (
-          candidatesByGroupFrom[groups.groupedFrom[positions.prevIndexes[k]]] ===
-            groups.groupedTo[positions.prevIndexes[k]] - groups.groupedFrom[positions.prevIndexes[k]] + 1 &&
-          candidatesByGroupFrom[groups.groupedFrom[positions.nextIndexes[k]]] ===
-            groups.groupedTo[positions.nextIndexes[k]] - groups.groupedFrom[positions.nextIndexes[k]] + 1
+          candidatesByGroup[groups.groupOf[positions.prevIndexes[k]]] ===
+            groups.groupSize[groups.groupOf[positions.prevIndexes[k]]] &&
+          candidatesByGroup[groups.groupOf[positions.nextIndexes[k]]] ===
+            groups.groupSize[groups.groupOf[positions.nextIndexes[k]]]
         ) {
           isDeleted[k] = 1
           isDeleted[positions.nextIndexes[k]] = 1
           isDeleted[positions.prevIndexes[k]] = 1
           toDelete -= 3
-          j = groups.groupedFrom[i] - 1
+          k = groupId
+          continue
         }
       } else {
         isDeleted[k] = 1
@@ -243,6 +254,7 @@ export function deletePositions(positions: Positions, groups: Groups, tolerance:
           heapupdate(heap, heapRev, positions.nextIndexes[k], priority, positions.coordinates)
         }
       }
+      k = groups.nextInGroup[k]
     }
   }
   return isDeleted
